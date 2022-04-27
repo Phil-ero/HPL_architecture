@@ -2,8 +2,10 @@ import sys
 import typing
 from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow
 from PyQt5.QtGui import QPalette, QColor, QRgba64
-import PyQt5.QtCore as QtCore
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
+
+from ParametersWidget import ParametersWidget
 
 class Color(QWidget):
     
@@ -21,7 +23,7 @@ class TabContent(QWidget):
         
         layout = QGridLayout()
         
-        layout.addWidget(Color('red'),0,0,3,1)
+        layout.addWidget(ParametersWidget(self),0,0,3,1)
         layout.addWidget(Color('green'),0,1,3,3)
         layout.addWidget(Color('blue'),3,0,2,4)
         self.setLayout(layout)
