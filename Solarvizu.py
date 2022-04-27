@@ -1,4 +1,4 @@
-import PyQt5
+import PyQt5.QtCore as QtCore
 import pyqtgraph as pg
 import numpy as np
 
