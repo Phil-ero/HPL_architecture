@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys
-from unittest import result
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QGroupBox, QBoxLayout, QGridLayout, QSlider, QLabel
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor
