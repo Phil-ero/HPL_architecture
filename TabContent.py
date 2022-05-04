@@ -1,6 +1,6 @@
 import sys
 import typing
-from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow
+from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow, QPushButton
 from PyQt5.QtGui import QPalette, QColor, QRgba64
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -16,6 +16,8 @@ class Color(QWidget):
         palette = self.palette()
         palette.setColor(QPalette.Window, QColor(color))
         self.setPalette(palette)
+        self.setMinimumWidth(300)
+        self.setMinimumHeight(200)
 
 class TabContent(QWidget):
     def __init__(self, parent: typing.Optional['QWidget'] = None) -> None:
@@ -26,6 +28,7 @@ class TabContent(QWidget):
         layout.addWidget(ParametersWidget([],self),0,0,3,1)
         layout.addWidget(Color('green'),0,1,3,3)
         layout.addWidget(Color('blue'),3,0,2,4)
+        layout.addWidget(QPushButton("Submit"),5,3,1,1)
         self.setLayout(layout)
         
 def test():
