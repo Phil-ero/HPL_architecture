@@ -1,11 +1,12 @@
 import sys
 import typing
-from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow, QPushButton
+from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow, QPushButton, QLabel
 from PyQt5.QtGui import QPalette, QColor, QRgba64
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
-from ParametersWidget import ParametersWidget
+from ParametersWidget import ParametersWidget, HBoxSlider
+from Section import Section
 
 class Color(QWidget):
     
@@ -20,16 +21,31 @@ class Color(QWidget):
         self.setMinimumHeight(200)
 
 class TabContent(QWidget):
+    def _MakeParameterWidgets(self,introText:str) -> None:
+        parameterWidgetsList:typing.List[QWidget] = []
+        
+        # Introductory text
+        introTextSection = Section(title="Presentation",parent=self)
+        introTextSectionLayout = QGridLayout(introTextSection.contentArea)
+        introTextSectionLayout.addWidget(QLabel(introText,introTextSection.contentArea))
+        introTextSection.setContentLayout(introTextSectionLayout)
+        
+        introTextSection.setMinimumWidth(introTextSectionLayout.itemAt(0).widget().sizeHint().width())
+        parameterWidgetsList.append(introTextSection)
+        
+        # Meteo
+        meteoSection = Section(title="Meteo",parent=self)
+        
+    
     def __init__(self, parent: typing.Optional['QWidget'] = None) -> None:
         super().__init__(parent)
+        self.layout = QGridLayout()
         
-        layout = QGridLayout()
-        
-        layout.addWidget(ParametersWidget([],self),0,0,3,1)
-        layout.addWidget(Color('green'),0,1,3,3)
-        layout.addWidget(Color('blue'),3,0,2,4)
-        layout.addWidget(QPushButton("Submit"),5,3,1,1)
-        self.setLayout(layout)
+        self.layout.addWidget(ParametersWidget([],self),0,0,3,1)
+        self.layout.addWidget(Color('green'),0,1,3,3)
+        self.layout.addWidget(Color('blue'),3,0,2,4)
+        self.layout.addWidget(QPushButton("Submit"),5,3,1,1)
+        self.setLayout(self.layout)
         
 def test():
     app = QApplication(sys.argv)
