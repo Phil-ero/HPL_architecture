@@ -36,9 +36,10 @@ class HBoxSlider(QWidget):
         
         layout.addWidget(QLabel(str(minVal)),1,0,1,1,Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
         layout.addWidget(QLabel(str(maxVal)),1,1,1,1,Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
         
         self.setLayout(layout)
-        self.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
         
     def _SliderUpdated(self):
         val = self.slider.value()
@@ -71,6 +72,7 @@ class ParametersStack(QWidget):
         super().__init__(parent)
 
         self._layParameters(paramList)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
 
 
 class ParametersWidget(QScrollArea):
@@ -82,37 +84,41 @@ class ParametersWidget(QScrollArea):
         self.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setWidget(ParametersStack(paramList, self))
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
         
 
 def test():
     app = QApplication(sys.argv)
     
     anglesSection = Section("Solar pannel angles")
-    anglesLayout = QVBoxLayout(anglesSection)
-    #anglesLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+    anglesLayout = QVBoxLayout(anglesSection.contentArea)
     
     verticalAngleWidget = QWidget(anglesSection)
     verticalAngleLayout = QHBoxLayout(verticalAngleWidget)
     verticalAngleLayout.addWidget(QLabel("Vertical angle"),alignment=Qt.AlignmentFlag.AlignLeft)
     verticalAngleLayout.addWidget(HBoxSlider(0,90,1,verticalAngleWidget))
-    verticalAngleLayout.addWidget(QLabel("°"),alignment=Qt.AlignmentFlag.AlignLeft)
+    verticalAngleLayout.addWidget(QLabel("°"),alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+    verticalAngleLayout.setSpacing(20)
     verticalAngleWidget.setLayout(verticalAngleLayout)
-    verticalAngleWidget.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.Fixed)
+    
     
     orientationAngleWidget = QWidget(anglesSection)
     orientationAngleLayout = QHBoxLayout(orientationAngleWidget)
     orientationAngleLayout.addWidget(QLabel("Orientation"),alignment=Qt.AlignmentFlag.AlignLeft)
     orientationAngleLayout.addWidget(HBoxSlider(0,360,1,orientationAngleWidget))
-    orientationAngleLayout.addWidget(QLabel("°"),alignment=Qt.AlignmentFlag.AlignLeft)
+    orientationAngleLayout.addWidget(QLabel("°"),alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+    orientationAngleLayout.setSpacing(20)
     orientationAngleWidget.setLayout(orientationAngleLayout)
     
     anglesLayout.addWidget(verticalAngleWidget)
     anglesLayout.addWidget(orientationAngleWidget)
     anglesSection.setContentLayout(anglesLayout)
+    anglesSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+    
+    anglesSection.setMinimumWidth(max([verticalAngleWidget.sizeHint().width(),orientationAngleWidget.sizeHint().width()]))
     
     dimSection = Section("Solar pannel dimensions")
-    dimSectionLayout = QVBoxLayout(dimSection)
-    #dimSectionLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+    dimSectionLayout = QVBoxLayout(dimSection.contentArea)
     
     solarPannelWidthWidget = QWidget(dimSection)
     solarPannelWidthLayout = QHBoxLayout(solarPannelWidthWidget)
@@ -129,12 +135,14 @@ def test():
     dimSectionLayout.addWidget(solarPannelWidthWidget)
     dimSectionLayout.addWidget(solarPannelHeightWidget)
     dimSection.setContentLayout(dimSectionLayout)
+    dimSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
     
     
     win = QMainWindow()
     win.setWindowTitle("Param test window")
-    win.setCentralWidget(ParametersWidget(
-        [anglesSection,dimSection], win))
+    win.setCentralWidget(ParametersWidget([anglesSection,dimSection], win))
+    #win.setCentralWidget(ParametersWidget([verticalAngleWidget,orientationAngleWidget,solarPannelHeightWidget,solarPannelWidthWidget],win))
+    #win.setCentralWidget(anglesSection)
     win.show()
     sys.exit(app.exec_())
     
