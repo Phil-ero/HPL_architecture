@@ -1,6 +1,9 @@
+from ctypes import alignment
 import sys
 import typing
-from PyQt5.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QLabel, QApplication, QMainWindow, QSlider, QLineEdit, QGridLayout, QFormLayout
+from PyQt5.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,\
+    QApplication, QMainWindow, QSlider, QLineEdit, QGridLayout, QLabel,\
+    QLayout, QSizePolicy
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from Section import Section
@@ -17,17 +20,25 @@ class HBoxSlider(QWidget):
         self.slider.setRange(minVal,maxVal)
         self.slider.setSingleStep(stepVal)
         self.slider.setValue(minVal + (maxVal-minVal)//2)
+        self.slider.setTickInterval(1)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.slider.valueChanged.connect(self._SliderUpdated)
+        self.slider.setMinimumWidth(200)
         layout.addWidget(self.slider,0,0,1,2)
         
         self.textbox = QLineEdit(str(minVal + (maxVal-minVal)//2),self)
         self.textbox.setMaxLength(len(str(maxVal)))
+        self.textbox.setAlignment(Qt.AlignmentFlag.AlignRight)
         text_fontMetrics = self.textbox.fontMetrics()
         self.textbox.setFixedWidth(text_fontMetrics.maxWidth()*self.textbox.maxLength())
         self.textbox.returnPressed.connect(self._TextboxUpdated)
         layout.addWidget(self.textbox,0,2)
         
+        layout.addWidget(QLabel(str(minVal)),1,0,1,1,Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(QLabel(str(maxVal)),1,1,1,1,Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        
         self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.Fixed)
         
     def _SliderUpdated(self):
         val = self.slider.value()
@@ -42,7 +53,7 @@ class HBoxSlider(QWidget):
             return
         
         self.slider.setValue(val)
-        
+                
 
 #################### Parameters' stack ####################
 
@@ -50,6 +61,7 @@ class ParametersStack(QWidget):
 
     def _layParameters(self, paramList: typing.List[QWidget]):
         layout = QVBoxLayout()
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
         for pWidget in paramList:
             layout.addWidget(pWidget)
 
@@ -70,14 +82,59 @@ class ParametersWidget(QScrollArea):
         self.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setWidget(ParametersStack(paramList, self))
-
+        
 
 def test():
     app = QApplication(sys.argv)
+    
+    anglesSection = Section("Solar pannel angles")
+    anglesLayout = QVBoxLayout(anglesSection)
+    #anglesLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+    
+    verticalAngleWidget = QWidget(anglesSection)
+    verticalAngleLayout = QHBoxLayout(verticalAngleWidget)
+    verticalAngleLayout.addWidget(QLabel("Vertical angle"),alignment=Qt.AlignmentFlag.AlignLeft)
+    verticalAngleLayout.addWidget(HBoxSlider(0,90,1,verticalAngleWidget))
+    verticalAngleLayout.addWidget(QLabel("°"),alignment=Qt.AlignmentFlag.AlignLeft)
+    verticalAngleWidget.setLayout(verticalAngleLayout)
+    verticalAngleWidget.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.Fixed)
+    
+    orientationAngleWidget = QWidget(anglesSection)
+    orientationAngleLayout = QHBoxLayout(orientationAngleWidget)
+    orientationAngleLayout.addWidget(QLabel("Orientation"),alignment=Qt.AlignmentFlag.AlignLeft)
+    orientationAngleLayout.addWidget(HBoxSlider(0,360,1,orientationAngleWidget))
+    orientationAngleLayout.addWidget(QLabel("°"),alignment=Qt.AlignmentFlag.AlignLeft)
+    orientationAngleWidget.setLayout(orientationAngleLayout)
+    
+    anglesLayout.addWidget(verticalAngleWidget)
+    anglesLayout.addWidget(orientationAngleWidget)
+    anglesSection.setContentLayout(anglesLayout)
+    
+    dimSection = Section("Solar pannel dimensions")
+    dimSectionLayout = QVBoxLayout(dimSection)
+    #dimSectionLayout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+    
+    solarPannelWidthWidget = QWidget(dimSection)
+    solarPannelWidthLayout = QHBoxLayout(solarPannelWidthWidget)
+    solarPannelWidthLayout.addWidget(QLabel("Width"),alignment=Qt.AlignmentFlag.AlignLeft)
+    solarPannelWidthLayout.addWidget(HBoxSlider(1,100,1,solarPannelWidthWidget))
+    solarPannelWidthLayout.addWidget(QLabel("m"),alignment=Qt.AlignmentFlag.AlignLeft)
+    
+    solarPannelHeightWidget = QWidget(dimSection)
+    solarPannelHeightLayout = QHBoxLayout(solarPannelHeightWidget)
+    solarPannelHeightLayout.addWidget(QLabel("Height"),alignment=Qt.AlignmentFlag.AlignLeft)
+    solarPannelHeightLayout.addWidget(HBoxSlider(1,100,1,solarPannelHeightWidget))
+    solarPannelHeightLayout.addWidget(QLabel("m"),alignment=Qt.AlignmentFlag.AlignLeft)
+    
+    dimSectionLayout.addWidget(solarPannelWidthWidget)
+    dimSectionLayout.addWidget(solarPannelHeightWidget)
+    dimSection.setContentLayout(dimSectionLayout)
+    
+    
     win = QMainWindow()
     win.setWindowTitle("Param test window")
     win.setCentralWidget(ParametersWidget(
-        [Section("L1"), Section("L2"), Section("L3")], win))
+        [anglesSection,dimSection], win))
     win.show()
     sys.exit(app.exec_())
     
@@ -91,4 +148,5 @@ def test_HBoxSlider():
 
 
 if __name__ == "__main__":
-    test_HBoxSlider()
+    test()
+    #test_HBoxSlider()

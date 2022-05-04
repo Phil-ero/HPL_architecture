@@ -23,7 +23,7 @@ class TabContent(QWidget):
         
         layout = QGridLayout()
         
-        layout.addWidget(ParametersWidget(self),0,0,3,1)
+        layout.addWidget(ParametersWidget([],self),0,0,3,1)
         layout.addWidget(Color('green'),0,1,3,3)
         layout.addWidget(Color('blue'),3,0,2,4)
         self.setLayout(layout)
