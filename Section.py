@@ -23,10 +23,10 @@ class Section(wd.QWidget):
     
         self.headerLine.setFrameShape(wd.QFrame.HLine)
         self.headerLine.setFrameShadow(wd.QFrame.Sunken)
-        self.headerLine.setSizePolicy(wd.QSizePolicy.Expanding, wd.QSizePolicy.Maximum)
+        self.headerLine.setSizePolicy(wd.QSizePolicy.Policy.Minimum, wd.QSizePolicy.Policy.Maximum)
     
         # self.contentArea.setLayout(wd.QHBoxLayout())
-        self.contentArea.setSizePolicy(wd.QSizePolicy.Expanding, wd.QSizePolicy.Fixed)
+        self.contentArea.setSizePolicy(wd.QSizePolicy.Policy.Minimum, wd.QSizePolicy.Policy.Fixed)
     
         # start out collapsed
         self.contentArea.setMaximumHeight(0)
