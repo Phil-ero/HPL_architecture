@@ -137,6 +137,8 @@ def test():
     dimSection.setContentLayout(dimSectionLayout)
     dimSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
     
+    dimSection.setMinimumWidth(max([solarPannelHeightLayout.sizeHint().width(),solarPannelWidthLayout.sizeHint().width()]))
+    
     
     win = QMainWindow()
     win.setWindowTitle("Param test window")
