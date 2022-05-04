@@ -1,4 +1,3 @@
-from ctypes import alignment
 import sys
 import typing
 from PyQt5.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,\
