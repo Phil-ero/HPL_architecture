@@ -149,8 +149,7 @@ def test():
     anglesSection = Section("Solar pannel angles")
     anglesLayout = QVBoxLayout(anglesSection.contentArea)
     
-    verticalAngleWidget = HBoxSlider(0,90,1,"Vertical angle:","°",verticalAngleWidget)
-    
+    verticalAngleWidget = HBoxSlider(0,90,1,"Vertical angle:","°")
     
     orientationAngleWidget = OrientationWidget(anglesSection)
     
@@ -164,24 +163,16 @@ def test():
     dimSection = Section("Solar pannel dimensions")
     dimSectionLayout = QVBoxLayout(dimSection.contentArea)
     
-    solarPannelWidthWidget = HBoxSlider(1,100,1,"Width:","m",solarPannelWidthWidget)
-    solarPannelWidthLayout = QHBoxLayout(solarPannelWidthWidget)
-    solarPannelWidthLayout.addWidget(QLabel("Width"),alignment=Qt.AlignmentFlag.AlignLeft)
-    solarPannelWidthLayout.addWidget()
-    solarPannelWidthLayout.addWidget(QLabel("m"),alignment=Qt.AlignmentFlag.AlignLeft)
+    solarPannelWidthWidget = HBoxSlider(1,100,1,"Width:","m")
     
-    solarPannelHeightWidget = QWidget(dimSection)
-    solarPannelHeightLayout = QHBoxLayout(solarPannelHeightWidget)
-    solarPannelHeightLayout.addWidget(QLabel("Height"),alignment=Qt.AlignmentFlag.AlignLeft)
-    solarPannelHeightLayout.addWidget(HBoxSlider(1,100,1,solarPannelHeightWidget))
-    solarPannelHeightLayout.addWidget(QLabel("m"),alignment=Qt.AlignmentFlag.AlignLeft)
+    solarPannelHeightWidget = HBoxSlider(1,100,1,"Height","m")
     
     dimSectionLayout.addWidget(solarPannelWidthWidget)
     dimSectionLayout.addWidget(solarPannelHeightWidget)
     dimSection.setContentLayout(dimSectionLayout)
     dimSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
     
-    dimSection.setMinimumWidth(max([solarPannelHeightLayout.sizeHint().width(),solarPannelWidthLayout.sizeHint().width()]))
+    dimSection.setMinimumWidth(max([solarPannelWidthWidget.sizeHint().width(),solarPannelHeightWidget.sizeHint().width()]))
     
     
     win = QMainWindow()
@@ -210,6 +201,6 @@ def test_angles():
 
 
 if __name__ == "__main__":
-    #test()
-    test_HBoxSlider()
+    test()
+    #test_HBoxSlider()
     #test_angles()
