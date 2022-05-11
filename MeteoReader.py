@@ -85,6 +85,7 @@ class MonthMeteoWidget(QWidget):
         monthWidget = pg.PlotWidget(name="monthWidget")
         monthWidget.setXRange(1, len(monthDates)+1)
         monthPlotItem: pg.PlotItem = monthWidget.getPlotItem()
+        monthPlotItem.enableAutoRange()
         monthPlotItem.setLabel("left", "Energy per meter squared", "Wh/m^2")
         monthPlotItem.setLabel("bottom", "Month")
         monthPlotItem.addItem(pg.BarGraphItem(
@@ -92,11 +93,11 @@ class MonthMeteoWidget(QWidget):
             pen=pg.mkPen(pg.mkColor('y')),
             brush=pg.mkBrush(pg.mkColor('r'))))
         monthPlotItem.getViewBox().setMouseEnabled(x=False, y=False)
-        monthWidget.setMinimumHeight(300)
-        monthWidget.setMinimumWidth(300)
+        monthWidget.setFixedHeight(300)
+        monthWidget.setFixedWidth(400)
 
-        monthWidget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,
-                                  QSizePolicy.Policy.MinimumExpanding)
+        monthWidget.setSizePolicy(QSizePolicy.Policy.Minimum,
+                                  QSizePolicy.Policy.Minimum)
 
         layout.addWidget(monthWidget, 0, 0, 2, 2)
         

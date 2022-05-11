@@ -119,16 +119,23 @@ class ParametersStack(QWidget):
     def _layParameters(self, paramList: typing.List[QWidget]):
         layout = QVBoxLayout()
         layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+        maxWidth = 0
         for pWidget in paramList:
             layout.addWidget(pWidget)
+            pWidget.setParent(self)
+            pWidget.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.MinimumExpanding)
+            maxWidth = max(maxWidth,pWidget.minimumWidth())
+            
 
+        self.setMinimumWidth(maxWidth)
         self.setLayout(layout)
+        
 
     def __init__(self, paramList: typing.List[QWidget], parent: typing.Optional['QWidget'] = None) -> None:
         super().__init__(parent)
 
         self._layParameters(paramList)
-        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.MinimumExpanding)
 
 
 class ParametersWidget(QScrollArea):
@@ -140,7 +147,8 @@ class ParametersWidget(QScrollArea):
         self.setHorizontalScrollBarPolicy(
             QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setWidget(ParametersStack(paramList, self))
-        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        self.setMinimumWidth(self.widget().minimumWidth())
+        self.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.MinimumExpanding)
         
 
 def test():
@@ -156,7 +164,6 @@ def test():
     anglesLayout.addWidget(verticalAngleWidget)
     anglesLayout.addWidget(orientationAngleWidget)
     anglesSection.setContentLayout(anglesLayout)
-    anglesSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
     
     anglesSection.setMinimumWidth(max([verticalAngleWidget.sizeHint().width(),orientationAngleWidget.sizeHint().width()]))
     
@@ -170,7 +177,6 @@ def test():
     dimSectionLayout.addWidget(solarPannelWidthWidget)
     dimSectionLayout.addWidget(solarPannelHeightWidget)
     dimSection.setContentLayout(dimSectionLayout)
-    dimSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
     
     dimSection.setMinimumWidth(max([solarPannelWidthWidget.sizeHint().width(),solarPannelHeightWidget.sizeHint().width()]))
     

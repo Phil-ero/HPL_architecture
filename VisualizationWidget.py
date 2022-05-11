@@ -4,7 +4,7 @@ from PyQt5 import QtCore
 import typing
 
 class VisualizationWidget(QWidget):
-    def __init__(self, parent: typing.Optional['QWidget'] = ..., flags: typing.Union[QtCore.Qt.WindowFlags, QtCore.Qt.WindowType] = ...) -> None:
+    def __init__(self, parent: typing.Optional['QWidget'] = None) -> None:
         super().__init__(parent, flags)
         
         layout = QGridLayout()
