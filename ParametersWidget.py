@@ -29,7 +29,7 @@ class HBoxSlider(QWidget):
         self.textbox.setMaxLength(len(str(maxVal)))
         self.textbox.setAlignment(Qt.AlignmentFlag.AlignRight)
         text_fontMetrics = self.textbox.fontMetrics()
-        self.textbox.setFixedWidth(text_fontMetrics.maxWidth()*self.textbox.maxLength())
+        self.textbox.setFixedWidth(text_fontMetrics.maxWidth()*self.textbox.maxLength()//2)
         self.textbox.returnPressed.connect(self._TextboxUpdated)
         layout.addWidget(self.textbox,0,3)
         
