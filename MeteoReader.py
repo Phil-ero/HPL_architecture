@@ -71,7 +71,7 @@ def aggregateByMonth(dates: typing.List[datetime], energies: typing.List[int]) -
 
     return monthDate_list, output_energies
 
-
+#################### Widgets to display meteo data ####################
 class MonthMeteoWidget(QWidget):
     def __init__(self, data_path: str, parent: typing.Optional['QWidget'] = None) -> None:
         super().__init__(parent)
@@ -99,6 +99,35 @@ class MonthMeteoWidget(QWidget):
                                   QSizePolicy.Policy.MinimumExpanding)
 
         layout.addWidget(monthWidget, 0, 0, 2, 2)
+        
+class DayMeteoWidget(QWidget):
+    def __init__(self, data_path: str, parent: typing.Optional['QWidget'] = None) -> None:
+        super().__init__(parent)
+        self.data_src = data_path
+
+        dates, energies = loadMeteoCSV("meteo.csv")
+        dayDates, dayEnergies = aggregateByDay(dates, energies)
+
+        layout = QGridLayout(self)
+
+        dayWidget = pg.PlotWidget(name="dayWidget")
+        dayWidget.setXRange(1, len(dayDates)+1)
+        dayPlotItem: pg.PlotItem = dayWidget.getPlotItem()
+        dayPlotItem.setLabel("left", "Energy per meter squared", "Wh/m^2")
+        dayPlotItem.setLabel("bottom", "day")
+        dayPlotItem.addItem(pg.BarGraphItem(
+            x=range(1, len(dayDates)+1), y1=dayEnergies, width=1,
+            pen=pg.mkPen(pg.mkColor('y')),
+            brush=pg.mkBrush(pg.mkColor('y'))))
+        dayPlotItem.getViewBox().setMouseEnabled(x=False, y=False)
+        dayWidget.setMinimumHeight(300)
+        dayWidget.setMinimumWidth(300)
+
+        dayWidget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,
+                                  QSizePolicy.Policy.MinimumExpanding)
+
+        layout.addWidget(dayWidget, 0, 0, 2, 2)
+    
 
 
 def test():
@@ -142,36 +171,6 @@ def test():
 
     win.show()
     sys.exit(app.exec_())
-    app = pg.mkQApp()
-    mw = QMainWindow()
-    mw.setWindowTitle('Test plot meteo')
-    mw.resize(800, 800)
-    cw = QWidget(mw)
-    mw.setCentralWidget(cw)
-    l = QHBoxLayout()
-
-    # giving the plots names allows us to link their axes together
-    pw = pg.PlotWidget(name='Plot1')
-    l.addWidget(pw)
-    pw2 = pg.PlotWidget(name='Plot2')
-    l.addWidget(pw2)
-    cw.setLayout(l)
-
-    pw.setLabel('left', 'Engery', units='Wh/m^2')
-    pw.setLabel('bottom', 'Time', units='Day')
-    pw2.setLabel('left', 'Engery', units='Wh/m^2')
-    pw2.setLabel('bottom', 'Time', units='Month')
-
-    x_f = np.array(range(1, 366))
-    p1 = pw.plot()
-    p1.setData(y=y_f, x=x_f)
-    p1.setPen((200, 200, 100))
-
-    x_m_plot = range(1, 14)
-    pw2.plot(x_m_plot, y_m, stepMode="center", fillLevel=0,
-             fillOutline=True, brush=(0, 0, 255, 150))
-
-    mw.show()
 
 
 def test_monthMeteoWidget():
@@ -185,7 +184,7 @@ def test_monthMeteoWidget():
     app = QApplication(sys.argv)
     win = QMainWindow()
     win.setWindowTitle("MonthMeteoWidget test window")
-    win.setCentralWidget(MonthMeteoWidget("meteo.csv", win))
+    win.setCentralWidget(DayMeteoWidget("meteo.csv", win))
     win.show()
     sys.exit(app.exec_())
 
