@@ -90,8 +90,8 @@ class MonthMeteoWidget(QWidget):
         monthPlotItem.setLabel("bottom", "Month")
         monthPlotItem.addItem(pg.BarGraphItem(
             x=range(1, len(monthDates)+1), y1=monthEnergies, width=1,
-            pen=pg.mkPen(pg.mkColor('y')),
-            brush=pg.mkBrush(pg.mkColor('r'))))
+            pen=pg.mkPen(pg.mkColor((98,58,23,200)),width=2),
+            brush=pg.mkBrush(pg.mkColor((239,142,56,255)))))
         monthPlotItem.getViewBox().setMouseEnabled(x=False, y=False)
         monthWidget.setFixedHeight(300)
         monthWidget.setFixedWidth(400)
@@ -118,8 +118,8 @@ class DayMeteoWidget(QWidget):
         dayPlotItem.setLabel("bottom", "day")
         dayPlotItem.addItem(pg.BarGraphItem(
             x=range(1, len(dayDates)+1), y1=dayEnergies, width=1,
-            pen=pg.mkPen(pg.mkColor('y')),
-            brush=pg.mkBrush(pg.mkColor('y'))))
+            pen=pg.mkPen(pg.mkColor((62,37,14,255)),width=1/30),
+            brush=pg.mkBrush(pg.mkColor((242,145,56,200)))))
         dayPlotItem.getViewBox().setMouseEnabled(x=False, y=False)
         dayWidget.setMinimumHeight(300)
         dayWidget.setMinimumWidth(300)

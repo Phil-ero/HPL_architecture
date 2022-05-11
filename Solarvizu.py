@@ -1,36 +1,76 @@
-import PyQt5
+import sys
+from PyQt5.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,\
+    QApplication, QMainWindow, QSlider, QLineEdit, QGridLayout, QLabel,\
+    QLayout, QSizePolicy, QDial
 import pyqtgraph as pg
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 import numpy as np
 
+# -------------------- CLASS QWIDGET ------------------------------------
+
+class Solar_Panel(QWidget):
+    def __init__(self, angle_1 : int, angle_2 : int, length : int, _width : int):
+        super().__init__()
+
+        self.angle_1 = angle_1
+        self.angle_2 = angle_2
+        self.length = length
+        self._width = _width
+
+        layout = QHBoxLayout(self)
+
+        pg.setConfigOption('background', 'w')
+        pg.setConfigOptions(antialias=True)
+
+        self.widget_1 = pg.PlotWidget(name = 'Side View')
+        self.widget_1.plot([0., np.cos(self.angle_1*np.pi/180)*self.length], [0., np.sin(self.angle_1*np.pi/180)*self.length], pen = pg.mkPen(color='b', width = 5.))
+        self.widget_1.showGrid(x = True, y = True)
+        self.widget_1.setTitle('Angle 1: ' + str(self.angle_1) + '°')
+        self.widget_1.setLabel('bottom', "Length")
+        self.widget_1.setLabel('left', "Height")
+        self.widget_1.setMinimumWidth(200)
+        self.widget_1.setMinimumHeight(200)
+        self.widget_1.autoRange()
+
+        #self.widget_1.signal.connect(self.slot_function_side)
+
+        self.widget_2 = pg.PlotWidget(name = 'Sky View')
+        self.widget_2.plot([0., self._width], [np.cos(self.angle_1*np.pi/180)*self.length, np.cos(self.angle_1*np.pi/180)*self.length], fillLevel=0., fillBrush=(50,50,200,100), title="Sky_View")
+        self.widget_2.showGrid(x = True, y = True)
+        self.widget_2.setTitle('Angle 2: ' + str(self.angle_2) + '°')
+        self.widget_2.setLabel('bottom', "Width")
+        self.widget_2.setLabel('left', "Length")
+        self.widget_2.setMinimumWidth(200)
+        self.widget_2.setMinimumHeight(200)
+        self.widget_2.autoRange()
+
+        self.point = np.array([self._width/2, np.cos(self.angle_1*np.pi/180)*self.length*0.5])
+        self.arrow = pg.ArrowItem(headLen = 20, tailLen = 35, tailWidth = 5, pen =  pg.mkPen(color='w', width = 0.), brush= pg.mkBrush(color = 'w'), angle = -90 - self.angle_2, pos = self.point)
+        self.arrow_sud = pg.ArrowItem(headLen = 20, tailLen = 35, tailWidth = 5, pen =  pg.mkPen(color='r', width = 0.), brush= pg.mkBrush(color = 'r'), angle = -90, pos = self.point)
+        self.widget_2.addItem(self.arrow)
+        self.widget_2.addItem(self.arrow_sud)
+
+        #self.widget_2.signal.connect(self.slot_function_sky)
+
+        layout.addWidget(self.widget_1)
+        #layout.addWidget(QLabel(str(self.angle_1)),0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(self.widget_2)
+
+
+    #def slot_function_side(self):
+
+
+    #def slot_function_sky(self):
 # --------------------------------- Graphical Settings ------------------------------------------------------
 
-pg.setConfigOption('background', 'w')
-pen = pg.mkPen(color=(255, 0, 0), width=5, style=QtCore.Qt.DashLine)
-
-# --------------------------------- Parameters Settings ---------------------------------------------------------
-
-length = 1.5 # in meters
-width = 0.7 # in meters
-
-angle_1 = 20.*np.pi/180. # in degrees [0, 360]
-angle_2 = 0.*np.pi/180. # in degrees [0, 360]
-
-boundary_length = 2 # in meters
-boundary_width = 1.5 # in meters
-boundary_angle = 360 # in degrees
-
-x = np.array([0., np.cos(angle_1)*length])
-y = np.array([0., np.sin(angle_1)*length])
-
-plotWidget_1 = pg.plot(title="Side_View")
-plotWidget_1.plot(x, y, pen=pen, name="side_view")
-
-x0 = np.array([0., np.sin(angle_1)*length])
-
-plotWidget_2 = pg.plot(title="Sky_View")
-plotWidget_2.plot(x0, fillLevel=np.cos(angle_1)*length, name="sky_view")
+def test():
+    app = QApplication(sys.argv)
+    win = QMainWindow()
+    win.setWindowTitle("Solar Panel test window")
+    win.setCentralWidget(Solar_Panel(20, 45, 150, 70))
+    win.show()
+    sys.exit(app.exec_())
 
 if __name__ == '__main__':
-    import sys
-    if sys.flags.interactive != 1 or not hasattr(QtCore, 'PYQT_VERSION'):
-        pg.QtGui.QApplication.exec_()
+    test()
