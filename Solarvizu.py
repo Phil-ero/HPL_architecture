@@ -1,80 +1,74 @@
-from pyqtgraph.Qt import QtGui, QtCore
-from PyQt5.QtWidgets import (QApplication, QWidget, QPushButton, QVBoxLayout, QHBoxLayout, QMainWindow)
-import pyqtgraph as pg
-import numpy as np
 import sys
+from PyQt5.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,\
+    QApplication, QMainWindow, QSlider, QLineEdit, QGridLayout, QLabel,\
+    QLayout, QSizePolicy, QDial
+import pyqtgraph as pg
+from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
+import numpy as np
 
 # -------------------- CLASS QWIDGET ------------------------------------
 
 class Solar_Panel(QWidget):
-    def __init__(self, length, width, angle_1, angle_2):
+    def __init__(self, angle_1 : int, angle_2 : int, length : int, _width : int):
         super().__init__()
-        self.init_data(length, width, angle_1, angle_2)
 
-    def init_data(self, length, width, angle_1, angle_2):
-        boundary_length = 2 # [m]
-        boundary_width = 1.5 # [m]
+        self.angle_1 = angle_1
+        self.angle_2 = angle_2
+        self.length = length
+        self._width = _width
 
-        x1 = np.array([0, np.cos(angle_1*np.pi/180)*length])
-        y1 = np.array([0, np.sin(angle_1*np.pi/180)*length])
-        data_1 = np.array([x1, y1])
-
-        x2 = np.array([0., width])
-        y2 = np.array([np.cos(angle_1*np.pi/180)*length, np.cos(angle_1*np.pi/180)*length])
-        data_2 = np.array([x2, y2])
-
-        point = np.array([width/2, 0.05+np.cos(angle_1*np.pi/180)*length*0.5])
-        angles = np.array([angle_1, angle_2])
-
-        self.initUI(data_1, data_2, point, angles)
-    
-    def initUI(self, data_1, data_2, point, angles):
-        hbox = QHBoxLayout()
-        hbox.addStretch(1)
+        layout = QHBoxLayout(self)
 
         pg.setConfigOption('background', 'w')
         pg.setConfigOptions(antialias=True)
-        pen_gen = pg.mkPen(color=(51, 153, 255), width=5)
 
-        widget_1 = pg.PlotWidget(name = 'Side View')
-        widget_1.plot(title="Side_View")
-        widget_1.showGrid(x = True, y = True)
-        widget_1.setLabel('bottom', "Length")
-        widget_1.setLabel('left', "Height")
-        text = pg.TextItem(text = str(angles[0]), anchor = (0,0))
-        widget_1.addItem(text)
-        widget_1.plot(data_1[0], data_1[1], pen=pen_gen, name="side_view")
-        widget_1.setXRange(0, data_1[0][1])
-        widget_1.setYRange(0, data_1[1][1])
+        self.widget_1 = pg.PlotWidget(name = 'Side View')
+        self.widget_1.plot([0., np.cos(self.angle_1*np.pi/180)*self.length], [0., np.sin(self.angle_1*np.pi/180)*self.length], pen = pg.mkPen(color='b', width = 5.))
+        self.widget_1.showGrid(x = True, y = True)
+        self.widget_1.setTitle('Angle 1: ' + str(self.angle_1) + '°')
+        self.widget_1.setLabel('bottom', "Length")
+        self.widget_1.setLabel('left', "Height")
+        self.widget_1.setMinimumWidth(200)
+        self.widget_1.setMinimumHeight(200)
+        self.widget_1.autoRange()
 
-        widget_2 = pg.PlotWidget(name = 'Sky View')
-        widget_2.plot(title="Sky_View")
-        widget_2.showGrid(x = True, y = True)
-        widget_2.setLabel('bottom', "Width")
-        widget_2.setLabel('left', "Length")
-        widget_2.plot(data_2[1], fillLevel=0.0, brush=(50,50,200,100), name="sky_view")
-        arrow = pg.ArrowItem(angle = 90+angles[1], headLen = 50, pos = point)
-        widget_2.addItem(arrow)
-        widget_2.setXRange(0, data_2[0][1])
-        widget_2.setYRange(0, data_2[1][1])
+        #self.widget_1.signal.connect(self.slot_function_side)
 
-        hbox.addWidget(widget_1)
-        hbox.addWidget(widget_2)
+        self.widget_2 = pg.PlotWidget(name = 'Sky View')
+        self.widget_2.plot([0., self._width], [np.cos(self.angle_1*np.pi/180)*self.length, np.cos(self.angle_1*np.pi/180)*self.length], fillLevel=0., fillBrush=(50,50,200,100), title="Sky_View")
+        self.widget_2.showGrid(x = True, y = True)
+        self.widget_2.setTitle('Angle 2: ' + str(self.angle_2) + '°')
+        self.widget_2.setLabel('bottom', "Width")
+        self.widget_2.setLabel('left', "Length")
+        self.widget_2.setMinimumWidth(200)
+        self.widget_2.setMinimumHeight(200)
+        self.widget_2.autoRange()
 
-        self.setLayout(hbox)
-        self.setGeometry(400, 300, 400, 300)
+        self.point = np.array([self._width/2, np.cos(self.angle_1*np.pi/180)*self.length*0.5])
+        self.arrow = pg.ArrowItem(headLen = 20, tailLen = 35, tailWidth = 5, pen =  pg.mkPen(color='w', width = 0.), brush= pg.mkBrush(color = 'w'), angle = -90 - self.angle_2, pos = self.point)
+        self.arrow_sud = pg.ArrowItem(headLen = 20, tailLen = 35, tailWidth = 5, pen =  pg.mkPen(color='r', width = 0.), brush= pg.mkBrush(color = 'r'), angle = -90, pos = self.point)
+        self.widget_2.addItem(self.arrow)
+        self.widget_2.addItem(self.arrow_sud)
 
+        #self.widget_2.signal.connect(self.slot_function_sky)
+
+        layout.addWidget(self.widget_1)
+        #layout.addWidget(QLabel(str(self.angle_1)),0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(self.widget_2)
+
+
+    #def slot_function_side(self):
+
+
+    #def slot_function_sky(self):
 # --------------------------------- Graphical Settings ------------------------------------------------------
-length_ini = 1.5 # [m]
-width_ini = 0.7 # [m]
-angle_1_ini = 20. # degrees
-angle_2_ini = 45. # degrees
 
 def test():
     app = QApplication(sys.argv)
     win = QMainWindow()
     win.setWindowTitle("Solar Panel test window")
-    win.setCentralWidget(Solar_Panel(length_ini, width_ini, angle_1_ini, angle_2_ini))
+    win.setCentralWidget(Solar_Panel(20, 45, 150, 70))
     win.show()
     sys.exit(app.exec_())
 
