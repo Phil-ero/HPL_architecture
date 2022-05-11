@@ -154,7 +154,7 @@ class ParametersWidget(QScrollArea):
 def test():
     app = QApplication(sys.argv)
     
-    anglesSection = Section("Solar pannel angles")
+    anglesSection = Section("Solar panel angles")
     anglesLayout = QVBoxLayout(anglesSection.contentArea)
     
     verticalAngleWidget = HBoxSlider(0,90,1,"Vertical angle:","°")
@@ -167,24 +167,24 @@ def test():
     
     anglesSection.setMinimumWidth(max([verticalAngleWidget.sizeHint().width(),orientationAngleWidget.sizeHint().width()]))
     
-    dimSection = Section("Solar pannel dimensions")
+    dimSection = Section("Solar panel dimensions")
     dimSectionLayout = QVBoxLayout(dimSection.contentArea)
     
-    solarPannelWidthWidget = HBoxSlider(1,100,1,"Width:","m")
+    solarPanelWidthWidget = HBoxSlider(1,100,1,"Width:","m")
     
-    solarPannelHeightWidget = HBoxSlider(1,100,1,"Height","m")
+    solarPanelHeightWidget = HBoxSlider(1,100,1,"Height","m")
     
-    dimSectionLayout.addWidget(solarPannelWidthWidget)
-    dimSectionLayout.addWidget(solarPannelHeightWidget)
+    dimSectionLayout.addWidget(solarPanelWidthWidget)
+    dimSectionLayout.addWidget(solarPanelHeightWidget)
     dimSection.setContentLayout(dimSectionLayout)
     
-    dimSection.setMinimumWidth(max([solarPannelWidthWidget.sizeHint().width(),solarPannelHeightWidget.sizeHint().width()]))
+    dimSection.setMinimumWidth(max([solarPanelWidthWidget.sizeHint().width(),solarPanelHeightWidget.sizeHint().width()]))
     
     
     win = QMainWindow()
     win.setWindowTitle("Param test window")
     win.setCentralWidget(ParametersWidget([anglesSection,dimSection], win))
-    #win.setCentralWidget(ParametersWidget([verticalAngleWidget,orientationAngleWidget,solarPannelHeightWidget,solarPannelWidthWidget],win))
+    #win.setCentralWidget(ParametersWidget([verticalAngleWidget,orientationAngleWidget,solarPanelHeightWidget,solarPanelWidthWidget],win))
     #win.setCentralWidget(anglesSection)
     win.show()
     sys.exit(app.exec_())

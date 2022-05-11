@@ -1,5 +1,4 @@
 import typing
-from pandas import wide_to_long
 import pyqtgraph as pg
 import csv
 import sys
@@ -114,6 +113,7 @@ class DayMeteoWidget(QWidget):
         dayWidget = pg.PlotWidget(name="dayWidget")
         dayWidget.setXRange(1, len(dayDates)+1)
         dayPlotItem: pg.PlotItem = dayWidget.getPlotItem()
+        dayPlotItem.enableAutoRange()
         dayPlotItem.setLabel("left", "Energy per meter squared", "Wh/m^2")
         dayPlotItem.setLabel("bottom", "day")
         dayPlotItem.addItem(pg.BarGraphItem(

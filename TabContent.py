@@ -5,11 +5,13 @@ from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow, QPushB
 from PyQt5.QtGui import QPalette, QColor, QRgba64
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
+import pyqtgraph as pg
 
 from ParametersWidget import ParametersWidget, HBoxSlider
 from Section import Section
 from MeteoReader import DayMeteoWidget,MonthMeteoWidget
 from ParametersWidget import OrientationWidget,HBoxSlider
+from Solarvizu import Solar_Panel
 
 meteo_file = "meteo.csv"
 
@@ -47,8 +49,8 @@ class TabContent(QWidget):
         meteoSection.setMinimumWidth(meteoSectionLayout.itemAt(0).widget().sizeHint().width())
         parameterWidgetsList.append(meteoSection)
         
-        # Solar pannel angles
-        anglesSection = Section("Solar pannel angles")
+        # Solar panel angles
+        anglesSection = Section("Solar panel angles")
         anglesLayout = QVBoxLayout(anglesSection.contentArea)
         
         verticalAngleWidget = HBoxSlider(0,90,1,"Vertical angle:","°")
@@ -64,15 +66,15 @@ class TabContent(QWidget):
         
         parameterWidgetsList.append(anglesSection)
         
-        # Solar pannel dimensions
-        dimSection = Section("Solar pannel dimensions")
+        # Solar panel dimensions
+        dimSection = Section("Solar panel dimensions")
         dimSectionLayout = QVBoxLayout(dimSection.contentArea)
         
-        solarPannelWidthWidget = HBoxSlider(1,500,1,"Width:","cm")
-        solarPannelHeightWidget = HBoxSlider(1,500,1,"Height:","cm")
+        solarPanelWidthWidget = HBoxSlider(1,500,1,"Width:","cm")
+        solarPanelHeightWidget = HBoxSlider(1,500,1,"Height:","cm")
         
-        dimSectionLayout.addWidget(solarPannelWidthWidget)
-        dimSectionLayout.addWidget(solarPannelHeightWidget)
+        dimSectionLayout.addWidget(solarPanelWidthWidget)
+        dimSectionLayout.addWidget(solarPanelHeightWidget)
         dimSection.setContentLayout(dimSectionLayout)
         dimSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
         
@@ -87,7 +89,7 @@ class TabContent(QWidget):
         self.layout = QGridLayout()
         
         mainVisuTabs = QTabWidget(self)
-        mainVisuTabs.addTab(Color('green'),"Solar pannel")
+        mainVisuTabs.addTab(Solar_Panel(0,0,100,100),"Solar panel")
         mainVisuTabs.addTab(DayMeteoWidget(meteo_file),"Daily meteo")
         mainVisuTabs.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.MinimumExpanding)
         
@@ -98,6 +100,11 @@ class TabContent(QWidget):
         self.setLayout(self.layout)
         
 def test():
+    # General PyQtGraph options
+    pg.setConfigOption("background",'w')
+    pg.setConfigOption("foreground",'k')
+    pg.setConfigOption("antialias",True)
+    
     app = QApplication(sys.argv)
     win = QMainWindow()
     win.setWindowTitle("Tab test window")

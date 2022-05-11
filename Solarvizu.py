@@ -24,6 +24,8 @@ class Solar_Panel(QWidget):
         pg.setConfigOptions(antialias=True)
 
         self.widget_1 = pg.PlotWidget(name = 'Side View')
+        self.widget_1.getPlotItem().enableAutoRange()
+        self.widget_1.setMouseEnabled(x=False,y=False)
         self.widget_1.plot([0., np.cos(self.angle_1*np.pi/180)*self.length], [0., np.sin(self.angle_1*np.pi/180)*self.length], pen = pg.mkPen(color='b', width = 5.))
         self.widget_1.showGrid(x = True, y = True)
         self.widget_1.setTitle('Angle 1: ' + str(self.angle_1) + '°')
@@ -36,6 +38,8 @@ class Solar_Panel(QWidget):
         #self.widget_1.signal.connect(self.slot_function_side)
 
         self.widget_2 = pg.PlotWidget(name = 'Sky View')
+        self.widget_2.getPlotItem().enableAutoRange()
+        self.widget_2.setMouseEnabled(x=False,y=False)
         self.widget_2.plot([0., self._width], [np.cos(self.angle_1*np.pi/180)*self.length, np.cos(self.angle_1*np.pi/180)*self.length], fillLevel=0., fillBrush=(50,50,200,100), title="Sky_View")
         self.widget_2.showGrid(x = True, y = True)
         self.widget_2.setTitle('Angle 2: ' + str(self.angle_2) + '°')

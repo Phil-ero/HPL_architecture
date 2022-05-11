@@ -40,7 +40,7 @@ class MainWindow(QMainWindow):
     
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("HPL : Solar Pannel Simulator")
+        self.setWindowTitle("HPL : Solar Panel Simulator")
         self.resize(400, 200)
         
         self._createMenuBar()
