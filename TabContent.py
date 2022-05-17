@@ -6,7 +6,6 @@ from PyQt5.QtGui import QPalette, QColor, QRgba64
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
-from regex import F
 
 from ParametersWidget import ParametersWidget, HBoxSlider, VBoxSlider, VRangeSlider, HFloatSlider, VFloatSlider
 from Section import Section
