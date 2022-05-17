@@ -76,7 +76,7 @@ class MonthMeteoWidget(QWidget):
         super().__init__(parent)
         self.data_src = data_path
 
-        dates, energies = loadMeteoCSV("meteo.csv")
+        dates, energies = loadMeteoCSV(data_path)
         monthDates, monthEnergies = aggregateByMonth(dates, energies)
 
         layout = QGridLayout(self)
@@ -105,7 +105,7 @@ class DayMeteoWidget(QWidget):
         super().__init__(parent)
         self.data_src = data_path
 
-        dates, energies = loadMeteoCSV("meteo.csv")
+        dates, energies = loadMeteoCSV(data_path)
         dayDates, dayEnergies = aggregateByDay(dates, energies)
 
         layout = QGridLayout(self)
