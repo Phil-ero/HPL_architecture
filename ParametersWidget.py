@@ -4,12 +4,18 @@ from PyQt5.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,\
     QApplication, QMainWindow, QSlider, QLineEdit, QGridLayout, QLabel,\
     QLayout, QSizePolicy, QDial
 from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
+from superqt import QRangeSlider
 from Section import Section
 
 #################### Box for each parameter ####################
 
+nums = "0123456789+-."
+
 class HBoxSlider(QWidget):
+    
+    valueChanged = pyqtSignal()
+    
     def __init__(self, minVal: int, maxVal: int, stepVal: int, name:str,unit:str, parent: typing.Optional['QWidget'] = None) -> None:
         super().__init__(parent)
 
@@ -22,14 +28,14 @@ class HBoxSlider(QWidget):
         self.slider.setTickInterval(1)
         self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
         self.slider.valueChanged.connect(self._SliderUpdated)
-        self.slider.setMinimumWidth(200)
+        self.slider.setMinimumWidth(100)
         layout.addWidget(self.slider,0,1,1,2)
         
         self.textbox = QLineEdit(str(self.slider.value()),self)
-        self.textbox.setMaxLength(len(str(maxVal)))
+        self.textbox.setMaxLength(max([len(str(maxVal)),len(str(minVal))]))
         self.textbox.setAlignment(Qt.AlignmentFlag.AlignRight)
         text_fontMetrics = self.textbox.fontMetrics()
-        self.textbox.setFixedWidth(text_fontMetrics.maxWidth()*self.textbox.maxLength()//2)
+        self.textbox.setFixedWidth(max(text_fontMetrics.widthChar(c) for c in nums)*(self.textbox.maxLength()+1))
         self.textbox.returnPressed.connect(self._TextboxUpdated)
         layout.addWidget(self.textbox,0,3)
         
@@ -45,6 +51,7 @@ class HBoxSlider(QWidget):
     def _SliderUpdated(self):
         val = self.slider.value()
         self.textbox.setText(str(val))
+        self.valueChanged.emit()
         
     def _TextboxUpdated(self):
         try:
@@ -53,12 +60,251 @@ class HBoxSlider(QWidget):
             val = self.slider.value()
             self.textbox.setText(str(val))
             return
-        
         self.slider.setValue(val)
+        self.valueChanged.emit()
+        
+class HFloatSlider(QWidget):
+    
+    valueChanged = pyqtSignal()
+    
+    def __init__(self, minVal: int, maxVal: int, decimals: int, name:str,unit:str, parent: typing.Optional['QWidget'] = None) -> None:
+        super().__init__(parent)
+
+        layout = QGridLayout(self)
+        
+        self.divider = 10**decimals
+
+        self.slider = QSlider(Qt.Orientation.Horizontal, self)
+        self.slider.setRange(minVal,maxVal)
+        self.slider.setSingleStep(1)
+        self.slider.setValue(minVal + (maxVal-minVal)//2)
+        self.slider.setTickInterval(self.divider)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksBelow)
+        self.slider.valueChanged.connect(self._SliderUpdated)
+        self.slider.setMinimumWidth(100)
+        layout.addWidget(self.slider,0,1,1,2)
+        
+        self.textbox = QLineEdit(str(self.slider.value()/self.divider),self)
+        self.textbox.setMaxLength(max([len(str(maxVal)),len(str(minVal))])+1)
+        self.textbox.setAlignment(Qt.AlignmentFlag.AlignRight)
+        text_fontMetrics = self.textbox.fontMetrics()
+        self.textbox.setFixedWidth(max(text_fontMetrics.widthChar(c) for c in nums)*(self.textbox.maxLength()+1))
+        self.textbox.returnPressed.connect(self._TextboxUpdated)
+        layout.addWidget(self.textbox,0,3)
+        
+        layout.addWidget(QLabel(name+"    "),0,0,Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(QLabel(str(minVal/self.divider)),1,1,1,1,Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(QLabel(str(maxVal/self.divider)),1,2,1,1,Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(QLabel(unit),0,4,Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        
+        self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        
+    def _SliderUpdated(self):
+        val = self.slider.value()
+        self.textbox.setText(str(val/self.divider))
+        self.valueChanged.emit()
+        
+    def _TextboxUpdated(self):
+        try:
+            val = int(float(self.textbox.text()) * self.divider)
+        except ValueError:
+            val = self.slider.value()
+            self.textbox.setText(str(val/self.divider))
+            return
+        self.slider.setValue(val)
+        self.valueChanged.emit()
+        
+class VBoxSlider(QWidget):
+    
+    valueChanged = pyqtSignal()
+    
+    def __init__(self, minVal: int, maxVal: int, stepVal: int, name:str,unit:str, parent: typing.Optional['QWidget'] = None) -> None:
+        super().__init__(parent)
+
+        layout = QGridLayout(self)
+
+        self.slider = QSlider(Qt.Orientation.Vertical, self)
+        self.slider.setRange(minVal,maxVal)
+        self.slider.setSingleStep(stepVal)
+        self.slider.setValue(minVal + (maxVal-minVal)//2)
+        self.slider.setTickInterval(1)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksLeft)
+        self.slider.valueChanged.connect(self._SliderUpdated)
+        self.slider.setMinimumHeight(100)
+        layout.addWidget(self.slider,1,1,2,1)
+        
+        self.textbox = QLineEdit(str(self.slider.value()),self)
+        self.textbox.setMaxLength(max([len(str(maxVal)),len(str(minVal))]))
+        self.textbox.setAlignment(Qt.AlignmentFlag.AlignRight)
+        text_fontMetrics = self.textbox.fontMetrics()
+        self.textbox.setFixedWidth(max(text_fontMetrics.widthChar(c) for c in nums)*(self.textbox.maxLength()+1))
+        self.textbox.returnPressed.connect(self._TextboxUpdated)
+        layout.addWidget(self.textbox,0,1)
+        
+        layout.addWidget(QLabel(name+"    "),0,0,Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(QLabel(str(maxVal)),1,0,1,1,Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(QLabel(str(minVal)),2,0,1,1,Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
+        layout.addWidget(QLabel(unit),0,2,Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        
+        self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        
+    def _SliderUpdated(self):
+        val = self.slider.value()
+        self.textbox.setText(str(val))
+        self.valueChanged.emit()
+        
+    def _TextboxUpdated(self):
+        try:
+            val = int(self.textbox.text())
+        except ValueError:
+            val = self.slider.value()
+            self.textbox.setText(str(val))
+            return
+        self.slider.setValue(val)
+        self.valueChanged.emit()
+        
+class VFloatSlider(QWidget):
+    
+    valueChanged = pyqtSignal()
+    
+    def __init__(self, minVal: int, maxVal: int, decimals: int, name:str,unit:str, parent: typing.Optional['QWidget'] = None) -> None:
+        super().__init__(parent)
+
+        layout = QGridLayout(self)
+        
+        self.divider = 10**decimals
+
+        self.slider = QSlider(Qt.Orientation.Vertical, self)
+        self.slider.setRange(minVal,maxVal)
+        self.slider.setSingleStep(1)
+        self.slider.setValue(minVal + (maxVal-minVal)//2)
+        self.slider.setTickInterval(self.divider)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksLeft)
+        self.slider.valueChanged.connect(self._SliderUpdated)
+        self.slider.setMinimumHeight(100)
+        layout.addWidget(self.slider,1,1,2,1)
+        
+        self.textbox = QLineEdit(str(self.slider.value()/self.divider),self)
+        self.textbox.setMaxLength(max([len(str(maxVal)),len(str(minVal))])+1)
+        self.textbox.setAlignment(Qt.AlignmentFlag.AlignRight)
+        text_fontMetrics = self.textbox.fontMetrics()
+        self.textbox.setFixedWidth(max(text_fontMetrics.widthChar(c) for c in nums)*(self.textbox.maxLength()+1))
+        self.textbox.returnPressed.connect(self._TextboxUpdated)
+        layout.addWidget(self.textbox,0,1)
+        
+        layout.addWidget(QLabel(name+"    "),0,0,Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(QLabel(str(maxVal/self.divider)),1,0,1,1,Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(QLabel(str(minVal/self.divider)),2,0,1,1,Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
+        layout.addWidget(QLabel(unit),0,2,Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        
+        self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        
+    def _SliderUpdated(self):
+        val = self.slider.value()
+        self.textbox.setText(str(val/self.divider))
+        self.valueChanged.emit()
+        
+    def _TextboxUpdated(self):
+        try:
+            val = int(float(self.textbox.text()) * self.divider)
+        except ValueError:
+            val = self.slider.value()
+            self.textbox.setText(str(val/self.divider))
+            return
+        self.slider.setValue(val)
+        self.valueChanged.emit()
+    
+class VRangeSlider(QWidget):
+    valueChanged = pyqtSignal()
+    
+    def __init__(self, minVal: int, maxVal: int, stepVal: int, topName:str,bottomName:str,unit:str, parent: typing.Optional['QWidget'] = None) -> None:
+        super().__init__(parent)
+
+        layout = QGridLayout(self)
+
+        self.slider = QRangeSlider(Qt.Orientation.Vertical, self)
+        self.slider.setRange(minVal,maxVal)
+        self.slider.setSingleStep(stepVal)
+        self.slider.setValue((minVal + (maxVal-minVal)//4,minVal + 3*(maxVal-minVal)//4))
+        self.slider.setTickInterval(1)
+        self.slider.setTickPosition(QSlider.TickPosition.TicksLeft)
+        self.slider.valueChanged.connect(self._SliderUpdated)
+        self.slider.setMinimumHeight(100)
+        layout.addWidget(self.slider,1,1,2,1)
+        
+        self.maxTextbox = QLineEdit(str(self.slider.value()[1]),self)
+        self.maxTextbox.setMaxLength(max([len(str(maxVal)),len(str(minVal))]))
+        self.maxTextbox.setAlignment(Qt.AlignmentFlag.AlignRight)
+        text_fontMetrics = self.maxTextbox.fontMetrics()
+        self.maxTextbox.setFixedWidth(max(text_fontMetrics.widthChar(c) for c in nums)*(self.maxTextbox.maxLength()+1))
+        self.maxTextbox.returnPressed.connect(self._MaxTextboxUpdated)
+        layout.addWidget(self.maxTextbox,0,1)
+        
+        self.minTextbox = QLineEdit(str(self.slider.value()[0]),self)
+        self.minTextbox.setMaxLength(max([len(str(maxVal)),len(str(minVal))]))
+        self.minTextbox.setAlignment(Qt.AlignmentFlag.AlignRight)
+        text_fontMetrics = self.minTextbox.fontMetrics()
+        self.minTextbox.setFixedWidth(max(text_fontMetrics.widthChar(c) for c in nums)*(self.minTextbox.maxLength()+1))
+        self.minTextbox.returnPressed.connect(self._MinTextboxUpdated)
+        layout.addWidget(self.minTextbox,3,1)
+        
+        layout.addWidget(QLabel(topName+"    "),0,0,Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(QLabel(str(maxVal)),1,0,1,1,Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignTop)
+        layout.addWidget(QLabel(str(minVal)),2,0,1,1,Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignBottom)
+        layout.addWidget(QLabel(unit),0,2,Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        layout.addWidget(QLabel(bottomName+"    "),3,0,Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(QLabel(unit),3,2,Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        
+        self.setLayout(layout)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        
+    def _SliderUpdated(self):
+        vals = self.slider.value()
+        self.minTextbox.setText(str(vals[0]))
+        self.maxTextbox.setText(str(vals[1]))
+        self.valueChanged.emit()
+        
+    def _MaxTextboxUpdated(self):
+        vals = self.slider.value()
+        try:
+            val = int(self.maxTextbox.text())
+            if val <= vals[0]:
+                raise ValueError
+        except ValueError:
+            self.maxTextbox.setText(str(vals[1]))
+            return
+        self.slider.setValue((vals[0],val))
+        self.valueChanged.emit()
+        return
+
+    def _MinTextboxUpdated(self):
+        vals = self.slider.value()
+        try:
+            val = int(self.minTextbox.text())
+            if val >= vals[1]:
+                raise ValueError
+        except ValueError:
+            self.minTextbox.setText(str(vals[0]))
+            return
+        self.slider.setValue((val,vals[1]))
+        self.valueChanged.emit()
+        return
+    
                 
 #################### Angles widget ####################
 
 class OrientationWidget(QWidget):
+    
+    valueChanged = pyqtSignal()
+    
     def __init__(self,parent: typing.Optional['QWidget'] = None) -> None:
         super().__init__(parent)
 
@@ -75,10 +321,10 @@ class OrientationWidget(QWidget):
         
         
         self.textbox = QLineEdit(str(self.slider.value()),self)
-        self.textbox.setMaxLength(len(str(-180)))
+        self.textbox.setMaxLength(len(str(-180))+1)
         self.textbox.setAlignment(Qt.AlignmentFlag.AlignRight)
         text_fontMetrics = self.textbox.fontMetrics()
-        self.textbox.setFixedWidth(text_fontMetrics.maxWidth()*self.textbox.maxLength()//2)
+        self.textbox.setFixedWidth(max(text_fontMetrics.widthChar(c) for c in nums)*(self.textbox.maxLength()+1))
         self.textbox.returnPressed.connect(self._TextboxUpdated)
         layout.addWidget(self.textbox,1,4)
         
@@ -97,6 +343,7 @@ class OrientationWidget(QWidget):
     def _SliderUpdated(self):
         val = self.slider.value()
         self.textbox.setText(str(val))
+        self.valueChanged.emit()
         
     def _TextboxUpdated(self):
         try:
@@ -107,9 +354,7 @@ class OrientationWidget(QWidget):
             return
         
         self.slider.setValue(val)
-        
-        
-        
+        self.valueChanged.emit()
     
 
 #################### Parameters' stack ####################
@@ -197,6 +442,38 @@ def test_HBoxSlider():
     win.show()
     sys.exit(app.exec_())
     
+def test_VBoxSlider():
+    app = QApplication(sys.argv)
+    win = QMainWindow()
+    win.setWindowTitle("VBoxSlider test window")
+    win.setCentralWidget(VBoxSlider(0,10,1,"Test","bar",win))
+    win.show()
+    sys.exit(app.exec_())
+    
+def test_VRangeSlider():
+    app = QApplication(sys.argv)
+    win = QMainWindow()
+    win.setWindowTitle("VRangeSlider test window")
+    win.setCentralWidget(VRangeSlider(0,10,1,"Test","bar",win))
+    win.show()
+    sys.exit(app.exec_())
+    
+def test_HFloatSlider():
+    app = QApplication(sys.argv)
+    win = QMainWindow()
+    win.setWindowTitle("HFloatSlider test window")
+    win.setCentralWidget(HFloatSlider(-1000,1000,3,"Test","bar",win))
+    win.show()
+    sys.exit(app.exec_())
+    
+def test_VFloatSlider():
+    app = QApplication(sys.argv)
+    win = QMainWindow()
+    win.setWindowTitle("VFloatSlider test window")
+    win.setCentralWidget(VFloatSlider(0,1000,2,"Test","bar",win))
+    win.show()
+    sys.exit(app.exec_())
+    
 def test_angles():
     app = QApplication(sys.argv)
     win = QMainWindow()
@@ -207,6 +484,9 @@ def test_angles():
 
 
 if __name__ == "__main__":
-    test()
+    #test()
     #test_HBoxSlider()
+    #test_VBoxSlider()
+    #test_VRangeSlider()
+    test_HFloatSlider()
     #test_angles()
