@@ -1,37 +1,39 @@
 import sys
 import typing
 from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow, QPushButton, QLabel,\
-    QTabWidget, QVBoxLayout, QSizePolicy
+    QTabWidget, QVBoxLayout, QSizePolicy, QCheckBox
 from PyQt5.QtGui import QPalette, QColor, QRgba64
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
+from regex import F
 
-from ParametersWidget import ParametersWidget, HBoxSlider
+from ParametersWidget import ParametersWidget, HBoxSlider, VBoxSlider, VRangeSlider, HFloatSlider, VFloatSlider
 from Section import Section
 from MeteoReader import DayMeteoWidget,MonthMeteoWidget
 from ParametersWidget import OrientationWidget,HBoxSlider
 from Solarvizu import Solar_Panel
 
-meteo_file = "meteo.csv"
-
 class Color(QWidget):
     
-    def __init__(self, color:typing.Union[str,QRgba64]) -> None:
+    def __init__(self, *color) -> None:
         super().__init__()
         self.setAutoFillBackground(True)
 
         palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(color))
+        palette.setColor(QPalette.Window, QColor(*color))
         self.setPalette(palette)
         self.setMinimumWidth(300)
         self.setMinimumHeight(200)
 
 class TabContent(QWidget):
+
+    ##### Build the widget #####
+    
     def _MakeParameterWidgets(self,introText:str) -> None:
         parameterWidgetsList:typing.List[QWidget] = []
-        
-        # Introductory text
+        """
+        ## Introductory text
         introTextSection = Section(title="Presentation",parent=self)
         introTextSectionLayout = QGridLayout(introTextSection.contentArea)
         introTextSectionLayout.addWidget(QLabel(introText,introTextSection.contentArea))
@@ -39,65 +41,175 @@ class TabContent(QWidget):
         
         introTextSection.setMinimumWidth(introTextSectionLayout.itemAt(0).widget().sizeHint().width())
         parameterWidgetsList.append(introTextSection)
+        """
         
-        # Meteo
+        ## Localisation
+        
+        localisationSection = Section(title="Localisation", parent=self)
+        localisationLayout = QGridLayout(localisationSection.contentArea)
+        
+        # Widgets
+        self.latitudeWidget = VFloatSlider(-90000,90000,3,"Latitude","°")
+        self.latitudeWidget.valueChanged.connect(self._latitude_handler)
+        self.longitudeWidget = HFloatSlider(-180000,180000,3,"Longitude","°")
+        self.longitudeWidget.valueChanged.connect(self._longitude_handler)
+        
+        
+        self.mapWidget = Color(130,123,152,0.8)
+        
+        # Layout
+        
+        localisationLayout.addWidget(self.latitudeWidget,1,0,2,1)
+        localisationLayout.addWidget(self.longitudeWidget,0,0,1,2)
+        localisationLayout.addWidget(self.mapWidget,1,1,2,2)
+        localisationSection.setContentLayout(localisationLayout)
+        localisationSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        
+        parameterWidgetsList.append(localisationSection)
+        
+        
+        ## Meteo
         meteoSection = Section(title="Meteo",parent=self)
         meteoSectionLayout = QGridLayout(meteoSection.contentArea)
-        meteoSectionLayout.addWidget(MonthMeteoWidget(meteo_file))
+        meteoSectionLayout.addWidget(MonthMeteoWidget(self.meteo_file))
         meteoSection.setContentLayout(meteoSectionLayout)
         
         meteoSection.setMinimumWidth(meteoSectionLayout.itemAt(0).widget().sizeHint().width())
         parameterWidgetsList.append(meteoSection)
         
-        # Solar panel angles
-        anglesSection = Section("Solar panel angles")
-        anglesLayout = QVBoxLayout(anglesSection.contentArea)
+        ## Solar panel
+        # Declare section and layout
+        solarPanelSection = Section("Solar panel")
+        solarPanelLayout = QVBoxLayout(solarPanelSection.contentArea)
         
-        verticalAngleWidget = HBoxSlider(0,90,1,"Vertical angle:","°")
+        # Declare widgets and connect them to signal handlers
+        self.verticalAngleWidget = HBoxSlider(0,90,1,"Inclination angle:","°")
+        self.verticalAngleWidget.valueChanged.connect(self._inclination_angle_handler)
         
-        orientationAngleWidget = OrientationWidget(anglesSection)
+        self.orientationAngleWidget = OrientationWidget(solarPanelSection)
+        self.orientationAngleWidget.valueChanged.connect(self._orientation_angle_handler)
         
-        anglesLayout.addWidget(verticalAngleWidget)
-        anglesLayout.addWidget(orientationAngleWidget)
-        anglesSection.setContentLayout(anglesLayout)
-        anglesSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        self.solarPanelWidthWidget = HBoxSlider(1,500,1,"Width:","cm")
+        self.solarPanelWidthWidget.valueChanged.connect(self._width_handler)
         
-        anglesSection.setMinimumWidth(max([verticalAngleWidget.sizeHint().width(),orientationAngleWidget.sizeHint().width()]))
+        self.solarPanelHeightWidget = HBoxSlider(1,500,1,"Height:","cm")
+        self.solarPanelHeightWidget.valueChanged.connect(self._height_handler)
         
-        parameterWidgetsList.append(anglesSection)
+        self.solarPanelEfficiencyWidget = HBoxSlider(1,100,1,"Efficiency",'%')
+        self.solarPanelEfficiencyWidget.valueChanged.connect(self._efficiency_handler)
         
-        # Solar panel dimensions
-        dimSection = Section("Solar panel dimensions")
-        dimSectionLayout = QVBoxLayout(dimSection.contentArea)
+        # Add widgets to layout
+        solarPanelLayout.addWidget(self.verticalAngleWidget)
+        solarPanelLayout.addWidget(self.orientationAngleWidget)
+        solarPanelLayout.addWidget(self.solarPanelWidthWidget)
+        solarPanelLayout.addWidget(self.solarPanelHeightWidget)
+        solarPanelLayout.addWidget(self.solarPanelEfficiencyWidget)
+        solarPanelSection.setContentLayout(solarPanelLayout)
+        solarPanelSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
         
-        solarPanelWidthWidget = HBoxSlider(1,500,1,"Width:","cm")
-        solarPanelHeightWidget = HBoxSlider(1,500,1,"Height:","cm")
+        # Add Section to list
+        parameterWidgetsList.append(solarPanelSection)
         
-        dimSectionLayout.addWidget(solarPanelWidthWidget)
-        dimSectionLayout.addWidget(solarPanelHeightWidget)
-        dimSection.setContentLayout(dimSectionLayout)
-        dimSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        ## Boiler
+        # Declare section and layout
         
-        parameterWidgetsList.append(dimSection)
+        boilerSection = Section("Boiler")
+        boilerLayout = QVBoxLayout(boilerSection.contentArea)
+        
+        # Declare widgets and connect them
+        self.boilerConsumptionWidget = VBoxSlider(0,500,1,"Hot water consumption", "L/day")
+        self.boilerConsumptionWidget.valueChanged.connect(self._water_consumption_handler)
+        
+        self.boilerTemperaturesWidget = VRangeSlider(0,100,1,"Water output temperature", "Water input temperature","°C")
+        self.boilerTemperaturesWidget.valueChanged.connect(self._water_temperature_handler)
+        
+        self.boilerCapEnableWidget = QCheckBox("Hot water storage tank")
+        self.boilerCapEnableWidget.setChecked(False)
+        self.boilerCapEnableWidget.toggled.connect(self._boiler_capacity_enable_handler)
+        
+        self.boilerCapacityWidget = HBoxSlider(0,500,1,"Tank's capacity", "L")
+        self.boilerCapacityWidget.setDisabled(True)
+        self.boilerCapacityWidget.valueChanged.connect(self._boiler_capacity_handler)
+        
+        # Add widgets to layout
+        boilerLayout.addWidget(self.boilerConsumptionWidget)
+        boilerLayout.addWidget(self.boilerTemperaturesWidget)
+        boilerLayout.addWidget(self.boilerCapEnableWidget)
+        boilerLayout.addWidget(self.boilerCapacityWidget)
+        boilerSection.setContentLayout(boilerLayout)
+        boilerSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
+        
+        # Add Section to list
+        parameterWidgetsList.append(boilerSection)
         
         # Finally build the stack and put it in the layout
         self.layout.addWidget(ParametersWidget(parameterWidgetsList,self),0,0,3,1)
         
     
-    def __init__(self, parent: typing.Optional['QWidget'] = None) -> None:
+    def __init__(self, meteo_file:str, parent: typing.Optional['QWidget'] = None) -> None:
         super().__init__(parent)
         self.layout = QGridLayout()
+        self.meteo_file = meteo_file
+        
+        self.solarPanel = Solar_Panel(0,0,100,100)
+        self.dayMeteoWidget = DayMeteoWidget(self.meteo_file)
         
         mainVisuTabs = QTabWidget(self)
-        mainVisuTabs.addTab(Solar_Panel(0,0,100,100),"Solar panel")
-        mainVisuTabs.addTab(DayMeteoWidget(meteo_file),"Daily meteo")
+        mainVisuTabs.addTab(self.solarPanel,"Solar panel")
+        mainVisuTabs.addTab(self.dayMeteoWidget,"Daily meteo")
         mainVisuTabs.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.MinimumExpanding)
         
         self._MakeParameterWidgets("This is the intro text")
         self.layout.addWidget(mainVisuTabs,0,1,3,3)
         self.layout.addWidget(Color('blue'),3,0,2,4)
-        self.layout.addWidget(QPushButton("Submit"),5,3,1,1)
+        #self.layout.addWidget(QPushButton("Submit"),5,3,1,1)
         self.setLayout(self.layout)
+        
+        self.solarPanel.update_inclination_angle(self.verticalAngleWidget.slider.value())
+        self.solarPanel.update_orientation_angle(self.orientationAngleWidget.slider.value())
+        
+    ##### Slots (signal handlers) #####    
+    
+    def _latitude_handler(self) -> None:
+        return
+    
+    def _longitude_handler(self) -> None:
+        return
+    
+    def _inclination_angle_handler(self) -> None:
+        self.solarPanel.update_inclination_angle(self.verticalAngleWidget.slider.value())
+        return   
+    
+    def _orientation_angle_handler(self) -> None:
+        self.solarPanel.update_orientation_angle(self.orientationAngleWidget.slider.value())
+        return
+    
+    def _height_handler(self) -> None:
+        self.solarPanel.update_panel_length(self.solarPanelHeightWidget.slider.value())
+        return
+    
+    def _width_handler(self) -> None:
+        self.solarPanel.update_panel_width(self.solarPanelWidthWidget.slider.value())
+        return
+    
+    def _efficiency_handler(self) -> None:
+        return
+    
+    def _water_consumption_handler(self) -> None:
+        return
+    
+    def _water_temperature_handler(self) -> None:
+        return
+    
+    def _boiler_capacity_enable_handler(self) -> None:
+        if self.boilerCapEnableWidget.isChecked():
+            self.boilerCapacityWidget.setEnabled(True)
+        else:
+            self.boilerCapacityWidget.setEnabled(False)
+        return
+    
+    def _boiler_capacity_handler(self) -> None:
+        return
         
 def test():
     # General PyQtGraph options
@@ -108,7 +220,7 @@ def test():
     app = QApplication(sys.argv)
     win = QMainWindow()
     win.setWindowTitle("Tab test window")
-    win.setCentralWidget(TabContent(win))
+    win.setCentralWidget(TabContent("meteo.csv",win))
     win.show()
     sys.exit(app.exec_())
     

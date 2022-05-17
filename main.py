@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QTabWidget, QMen
 from PyQt5 import QtCore
 from PyQt5.QtGui import QPalette, QColor, QRgba64
 
-import ParametersWidget, VisualizationWidget, ResultsWidget
 from TabContent import TabContent
 
 class Color(QWidget):
@@ -30,9 +29,9 @@ class MainWindow(QMainWindow):
         
     def _createTabWidget(self) -> None:
         tabWidget = QTabWidget()
-        tabWidget.addTab(TabContent(self),"Tab 1")
-        tabWidget.addTab(TabContent(self),"Tab 2")
-        tabWidget.addTab(TabContent(self),"Tab 3")
+        tabWidget.addTab(TabContent("meteo.csv",self),"Tab 1")
+        tabWidget.addTab(TabContent("meteo.csv",self),"Tab 2")
+        tabWidget.addTab(TabContent("meteo.csv",self),"Tab 3")
         self.centralWidget = tabWidget
         #self.centralWidget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         self.setCentralWidget(self.centralWidget)
@@ -41,9 +40,9 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.setWindowTitle("HPL : Solar Panel Simulator")
-        self.resize(400, 200)
+        #self.resize(400, 200)
         
-        self._createMenuBar()
+        #self._createMenuBar()
         self._createTabWidget()
         
 
