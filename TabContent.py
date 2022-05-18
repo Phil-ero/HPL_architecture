@@ -50,6 +50,7 @@ class TabContent(QWidget):
         
         # Widgets
         self.latitudeWidget = VFloatSlider(-90000,90000,3,"Latitude","°")
+        self.latitudeWidget.slider.setValue(46204)
         self.latitudeWidget.valueChanged.connect(self._latitude_handler)
         self.longitudeWidget = HFloatSlider(-180000,180000,3,"Longitude","°")
         self.longitudeWidget.valueChanged.connect(self._longitude_handler)
@@ -83,6 +84,7 @@ class TabContent(QWidget):
         self.inclinationAngleWidget.valueChanged.connect(self._inclination_angle_handler)
         
         self.orientationAngleWidget = OrientationWidget(solarPanelSection)
+        self.orientationAngleWidget.slider.setValue(145)
         self.orientationAngleWidget.valueChanged.connect(self._orientation_angle_handler)
         
         self.solarPanelWidthWidget = HBoxSlider(1,500,1,"Width:","cm")
