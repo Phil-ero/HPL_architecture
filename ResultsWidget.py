@@ -38,21 +38,21 @@ class EnergyWidget(QWidget):
             self.timeByHour:typing.List[datetime] = [datetime(2002,1,1,0) + timedelta(hours=i) for i in range(365*24)] # dates, with year,month,day,hour
             self.receviedEnergyPerHour:typing.List[float] = [0]*365*24 #Wh/m^2
         
-        self.energyPerDay:typing.List[float] = [15]*365 #Wh
+        self.energyPerDay:typing.List[float] = [0]*365 #Wh
         
 
         # Graph        
         layout = QGridLayout(self)
         self.energyPlotWidget = pg.PlotWidget(name="energyWidget")
         self.energyPlotWidget.setXRange(1,len(self.energyPerDay)+1)
+        self.energyPlotWidget.setYRange(0,1000000)
         self.energyPlotItem: pg.PlotItem = self.energyPlotWidget.getPlotItem()
-        self.energyPlotItem.enableAutoRange()
         self.energyPlotItem.setLabel("left", "Energy", "Wh")
         self.energyPlotItem.setLabel("bottom", "Day")
         self.energyBarGraph: pg.BarGraphItem = pg.BarGraphItem(
             x=range(1, len(self.energyPerDay)+1), y1=self.energyPerDay, width=1,
-            pen=pg.mkPen(pg.mkColor((50,84,244,0.8*255)),width=2),
-            brush=pg.mkBrush(pg.mkColor((50,218,244,0.8*255))))
+            pen=pg.mkPen(pg.mkColor((50,84,244,int(0.8*255))),width=2),
+            brush=pg.mkBrush(pg.mkColor((50,218,244,int(0.8*255)))))
         self.energyPlotItem.addItem(self.energyBarGraph)
         self.energyPlotItem.getViewBox().setMouseEnabled(x=False, y=False)
         #self.energyPlotWidget.setMininmumHeight(150)
@@ -66,6 +66,7 @@ class EnergyWidget(QWidget):
         self._replot()
         
     def _replot(self) -> None:
+        
         # Do conversions for units when calling model function
         energyPerHour = CalcEnergy(self.panelHeight/100,self.panelWidth/100,
                                        self.panelInclination,
@@ -75,6 +76,11 @@ class EnergyWidget(QWidget):
                                        self.receviedEnergyPerHour)
         
         _,self.energyPerDay = aggregateByDay(self.timeByHour,energyPerHour)
+        
+        if max(self.energyPerDay) > 1000000:
+            self.energyPlotWidget.setYRange(0,max(self.energyPerDay)*1.05)
+        else:
+            self.energyPlotWidget.setYRange(0,1000000)
         
         self.energyBarGraph.setOpts(y1=self.energyPerDay)
         self.valueChanged.emit()
@@ -104,7 +110,7 @@ class EnergyWidget(QWidget):
         self._replot()
         
     def update_received_energy(self,l:typing.List[float]) -> None:
-        self.receviedEnergyPerDay = l.copy()
+        self.receviedEnergyPerHour = l.copy()
         self._replot()
         
 

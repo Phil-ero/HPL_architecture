@@ -165,7 +165,7 @@ class TabContent(QWidget):
         #self.layout.addWidget(QPushButton("Submit"),5,3,1,1)
         self.setLayout(self.layout)
         
-        self.resultsWidget.energyWidget.update_received_energy(self.meteo_energies)
+        
         
         self._update_all()
         
@@ -174,6 +174,7 @@ class TabContent(QWidget):
     def _update_all(self) -> None:
         self._latitude_handler()
         self._longitude_handler()
+        self._energy_received_handler()
         self._inclination_angle_handler()
         self._orientation_angle_handler()
         self._height_handler()
@@ -191,6 +192,10 @@ class TabContent(QWidget):
     def _longitude_handler(self) -> None:
         return
     
+    def _energy_received_handler(self) -> None:
+        self.resultsWidget.energyWidget.update_received_energy(self.meteo_energies.copy())
+        return
+    
     def _inclination_angle_handler(self) -> None:
         self.solarPanel.update_inclination_angle(self.inclinationAngleWidget.slider.value())
         self.resultsWidget.energyWidget.update_panel_inclination(self.inclinationAngleWidget.value())
@@ -203,7 +208,7 @@ class TabContent(QWidget):
     
     def _height_handler(self) -> None:
         self.solarPanel.update_panel_length(self.solarPanelHeightWidget.slider.value())
-        self.resultsWidget.energyWidget.update_panel_height(self.solarPanelWidthWidget.value())
+        self.resultsWidget.energyWidget.update_panel_height(self.solarPanelHeightWidget.value())
         return
     
     def _width_handler(self) -> None:

@@ -56,7 +56,7 @@ def CalcEnergy(L, l, alpha, beta, eta, lat, weather):
     # Solar panel shadow calculation
     hp = L * np.sin(alpha) + L * np.cos(alpha) * np.tan(h)
     lp = l * np.sin(beta + np.pi / 2 - a)
-    s = np.multiply(hp, lp)
+    s = np.clip(np.multiply(hp, lp),0,None)
 
     # Energy produced
     e = np.multiply(s, weather) * eta
