@@ -63,6 +63,9 @@ class HBoxSlider(QWidget):
         self.slider.setValue(val)
         self.valueChanged.emit()
         
+    def value(self) -> int:
+        return self.slider.value()
+        
 class HFloatSlider(QWidget):
     
     valueChanged = pyqtSignal()
@@ -116,6 +119,9 @@ class HFloatSlider(QWidget):
         self.slider.setValue(val)
         self.valueChanged.emit()
         
+    def value(self) -> float:
+        return self.slider.value()/self.divider
+        
 class VBoxSlider(QWidget):
     
     valueChanged = pyqtSignal()
@@ -166,6 +172,9 @@ class VBoxSlider(QWidget):
             return
         self.slider.setValue(val)
         self.valueChanged.emit()
+        
+    def value(self) -> int:
+        return self.slider.value()
         
 class VFloatSlider(QWidget):
     
@@ -219,6 +228,9 @@ class VFloatSlider(QWidget):
             return
         self.slider.setValue(val)
         self.valueChanged.emit()
+        
+    def value(self) -> float:
+        return self.slider.value()/self.divider
     
 class VRangeSlider(QWidget):
     valueChanged = pyqtSignal()
@@ -298,6 +310,9 @@ class VRangeSlider(QWidget):
         self.valueChanged.emit()
         return
     
+    def value(self) -> typing.Tuple:
+        return self.slider.value()
+    
                 
 #################### Angles widget ####################
 
@@ -355,6 +370,9 @@ class OrientationWidget(QWidget):
         
         self.slider.setValue(val)
         self.valueChanged.emit()
+        
+    def value(self) -> int:
+        return self.slider.value()
     
 
 #################### Parameters' stack ####################
