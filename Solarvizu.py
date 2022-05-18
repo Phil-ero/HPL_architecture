@@ -1,7 +1,6 @@
 import sys
 from PyQt5.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,\
-    QApplication, QMainWindow, QSlider, QLineEdit, QGridLayout, QLabel,\
-    QLayout, QSizePolicy, QDial
+    QApplication, QMainWindow
 import pyqtgraph as pg
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
