@@ -223,19 +223,24 @@ class TabContent(QWidget):
         return
     
     def _water_consumption_handler(self) -> None:
+        self.resultsWidget.satisfactionWidget.update_volume_wanted(self.boilerConsumptionWidget.value())
         return
     
     def _water_temperature_handler(self) -> None:
+        self.resultsWidget.satisfactionWidget.update_temperatures(self.boilerTemperaturesWidget.value())
         return
     
     def _boiler_capacity_enable_handler(self) -> None:
         if self.boilerCapEnableWidget.isChecked():
             self.boilerCapacityWidget.setEnabled(True)
+            self.resultsWidget.satisfactionWidget.update_water_tank(True,self.boilerCapacityWidget.value())
         else:
             self.boilerCapacityWidget.setEnabled(False)
+            self.resultsWidget.satisfactionWidget.update_water_tank(False,self.boilerCapacityWidget.value())
         return
     
     def _boiler_capacity_handler(self) -> None:
+        self.resultsWidget.satisfactionWidget.update_water_tank(self.boilerCapEnableWidget.isEnabled(),self.boilerCapacityWidget.value())
         return
         
 def test():
