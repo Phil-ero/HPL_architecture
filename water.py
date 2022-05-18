@@ -70,11 +70,25 @@ def calculate_water_energy(grams, start_temp, end_temp):
 def water(L,temp0,temp1,heating_day):
     grams = L *1000
     cth = 4.18 # [J*g-1*K-1]
-    heating_power = heating_day/86400
-    temp_reached = heating_power/(grams*cth)+temp0
+    #heating_power = heating_day/86400
+    #temp_reached = heating_power/(grams*cth)+temp0
+    temp_reached = heating_day/(grams*cth)+temp0
     energy_to_heat = grams * cth * ( temp1 - temp0)
-    delta_heat =  energy_to_heat - heating_power
+    #delta_heat =  energy_to_heat - heating_power
+    delta_heat =  energy_to_heat - heating_day
     return temp_reached, delta_heat
+
+def heatedLiters(temp0:float,temp1:float,energy:float) -> float:
+    # Assume temperatures in °C, energy in Wh and volume in L
+    # How many liters of waters can be heated from temp0 to temp1 given energy
+    # Energy = delta_T * rho * volume * c_th
+    c_th = 4185 #J. K^-1 . kg^-1
+    # For water, rho = 1 kg/L
+    delta_T = temp1 - temp0  #K
+    return energy/(delta_T * c_th)
+    
+    
+    
 
 
 
