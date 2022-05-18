@@ -9,9 +9,10 @@ import pyqtgraph as pg
 
 from ParametersWidget import ParametersWidget, HBoxSlider, VBoxSlider, VRangeSlider, HFloatSlider, VFloatSlider
 from Section import Section
-from MeteoReader import DayMeteoWidget,MonthMeteoWidget
+from MeteoReader import DayMeteoWidget,MonthMeteoWidget, loadMeteoCSV
 from ParametersWidget import OrientationWidget,HBoxSlider
 from Solarvizu import Solar_Panel
+from ResultsWidget import ResultsWidget
 
 class Color(QWidget):
     
@@ -53,14 +54,10 @@ class TabContent(QWidget):
         self.longitudeWidget = HFloatSlider(-180000,180000,3,"Longitude","°")
         self.longitudeWidget.valueChanged.connect(self._longitude_handler)
         
-        
-        self.mapWidget = Color(130,123,152,0.8)
-        
         # Layout
         
         localisationLayout.addWidget(self.latitudeWidget,1,0,2,1)
         localisationLayout.addWidget(self.longitudeWidget,0,0,1,2)
-        localisationLayout.addWidget(self.mapWidget,1,1,2,2)
         localisationSection.setContentLayout(localisationLayout)
         localisationSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
         
@@ -82,8 +79,8 @@ class TabContent(QWidget):
         solarPanelLayout = QVBoxLayout(solarPanelSection.contentArea)
         
         # Declare widgets and connect them to signal handlers
-        self.verticalAngleWidget = HBoxSlider(0,90,1,"Inclination angle:","°")
-        self.verticalAngleWidget.valueChanged.connect(self._inclination_angle_handler)
+        self.inclinationAngleWidget = HBoxSlider(0,90,1,"Inclination angle:","°")
+        self.inclinationAngleWidget.valueChanged.connect(self._inclination_angle_handler)
         
         self.orientationAngleWidget = OrientationWidget(solarPanelSection)
         self.orientationAngleWidget.valueChanged.connect(self._orientation_angle_handler)
@@ -98,7 +95,7 @@ class TabContent(QWidget):
         self.solarPanelEfficiencyWidget.valueChanged.connect(self._efficiency_handler)
         
         # Add widgets to layout
-        solarPanelLayout.addWidget(self.verticalAngleWidget)
+        solarPanelLayout.addWidget(self.inclinationAngleWidget)
         solarPanelLayout.addWidget(self.orientationAngleWidget)
         solarPanelLayout.addWidget(self.solarPanelWidthWidget)
         solarPanelLayout.addWidget(self.solarPanelHeightWidget)
@@ -149,6 +146,8 @@ class TabContent(QWidget):
         super().__init__(parent)
         self.layout = QGridLayout()
         self.meteo_file = meteo_file
+        self.meteo_dates,self.meteo_energies = loadMeteoCSV(meteo_file)
+        
         
         self.solarPanel = Solar_Panel(0,0,100,100)
         self.dayMeteoWidget = DayMeteoWidget(self.meteo_file)
@@ -158,40 +157,62 @@ class TabContent(QWidget):
         mainVisuTabs.addTab(self.dayMeteoWidget,"Daily meteo")
         mainVisuTabs.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.MinimumExpanding)
         
+        self.resultsWidget = ResultsWidget()
+        
         self._MakeParameterWidgets("This is the intro text")
         self.layout.addWidget(mainVisuTabs,0,1,3,3)
-        self.layout.addWidget(Color('blue'),3,0,2,4)
+        self.layout.addWidget(self.resultsWidget,3,0,2,4)
         #self.layout.addWidget(QPushButton("Submit"),5,3,1,1)
         self.setLayout(self.layout)
         
-        self.solarPanel.update_inclination_angle(self.verticalAngleWidget.slider.value())
-        self.solarPanel.update_orientation_angle(self.orientationAngleWidget.slider.value())
+        self.resultsWidget.energyWidget.update_received_energy(self.meteo_energies)
+        
+        self._update_all()
         
     ##### Slots (signal handlers) #####    
     
+    def _update_all(self) -> None:
+        self._latitude_handler()
+        self._longitude_handler()
+        self._inclination_angle_handler()
+        self._orientation_angle_handler()
+        self._height_handler()
+        self._width_handler()
+        self._efficiency_handler()
+        self._water_consumption_handler()
+        self._water_temperature_handler()
+        self._boiler_capacity_enable_handler()
+        self._boiler_capacity_handler()
+    
     def _latitude_handler(self) -> None:
+        self.resultsWidget.energyWidget.update_latitude(self.latitudeWidget.value())
         return
     
     def _longitude_handler(self) -> None:
         return
     
     def _inclination_angle_handler(self) -> None:
-        self.solarPanel.update_inclination_angle(self.verticalAngleWidget.slider.value())
+        self.solarPanel.update_inclination_angle(self.inclinationAngleWidget.slider.value())
+        self.resultsWidget.energyWidget.update_panel_inclination(self.inclinationAngleWidget.value())
         return   
     
     def _orientation_angle_handler(self) -> None:
         self.solarPanel.update_orientation_angle(self.orientationAngleWidget.slider.value())
+        self.resultsWidget.energyWidget.update_panel_orientation(self.orientationAngleWidget.value())
         return
     
     def _height_handler(self) -> None:
         self.solarPanel.update_panel_length(self.solarPanelHeightWidget.slider.value())
+        self.resultsWidget.energyWidget.update_panel_height(self.solarPanelWidthWidget.value())
         return
     
     def _width_handler(self) -> None:
         self.solarPanel.update_panel_width(self.solarPanelWidthWidget.slider.value())
+        self.resultsWidget.energyWidget.update_panel_width(self.solarPanelWidthWidget.value())
         return
     
     def _efficiency_handler(self) -> None:
+        self.resultsWidget.energyWidget.update_efficiency(self.solarPanelEfficiencyWidget.value())
         return
     
     def _water_consumption_handler(self) -> None:
