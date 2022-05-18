@@ -10,7 +10,7 @@ def CalcEnergy(L, l, alpha, beta, eta, lat, weather):
     # lat : latitude of building
     # weather : solar radiation energy per hour in a year [Wh/m^2]
 
-    alpha = alpha * np.pi / 180
+    alpha = (90-alpha) * np.pi / 180
     beta = beta * np.pi / 180
 
     phi = lat / 180 * np.pi
@@ -21,11 +21,9 @@ def CalcEnergy(L, l, alpha, beta, eta, lat, weather):
     h = np.zeros(0)
     a = h
     for i in day:
-        hd = np.arcsin(
-            np.sin(phi) * np.sin(deltas[i]) + np.cos(phi) * np.cos(deltas[i]) * np.cos(15 * (hour - 12) / 180 * np.pi))
+        hd = np.arcsin(np.sin(phi)*np.sin(deltas[i])+np.cos(phi)*np.cos(deltas[i])*np.cos(15*(hour-12)/180 * np.pi))
         h = np.append(h, hd)
-        had = np.arcsin(
-            np.sin(phi) * np.sin(-deltas[i]) + np.cos(phi) * np.cos(deltas[i]) * np.cos(15 * (hour - 12) / 180 * np.pi))
+        had = np.arcsin(np.sin(phi) * np.sin(-deltas[i])+np.cos(phi)*np.cos(deltas[i])*np.cos(15*(hour-12)/180*np.pi))
         ad = np.arcsin(np.cos(deltas[i]) / np.cos(had) * np.sin(15 * (hour - 12) / 180 * np.pi))
         a = np.append(a, ad)
 
@@ -39,25 +37,12 @@ def CalcEnergy(L, l, alpha, beta, eta, lat, weather):
         elif a[i] > a[i + 1]:
             a[i] = np.pi / 2
 
-    # plt.plot(h)
-    # plt.legend(['Hauteur'])
-    # plt.xlabel('Temps [h]')
-    # plt.ylabel('Angle [rad]')
-    # plt.title('Hauteur')
-    # plt.show()
-
-    # plt.plot(a)
-    # plt.legend(['azimut'])
-    # plt.xlabel('Temps [h]')
-    # plt.ylabel('Angle [rad]')
-    # plt.title('Azimut')
-    # plt.show()
 
     # Solar panel shadow calculation
-    hp = L * np.sin(alpha) + L * np.cos(alpha) * np.tan(h)
-    lp = l * np.sin(beta + np.pi / 2 - a)
-    s = np.clip(np.multiply(hp, lp),0,None)
+    hp = l * np.sin(alpha) + l * np.cos(alpha) * np.tan(h)
+    Lp = L * np.sin(beta + np.pi / 2 - a)
 
+    s = np.clip(np.multiply(hp, Lp),0,None)
     # Energy produced
     e = np.multiply(s, weather) * eta
 
