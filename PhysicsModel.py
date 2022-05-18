@@ -4,23 +4,23 @@ def CalcEnergy(L, l, alpha, beta, eta, lat, weather):
     # Inputs :
     # L : length of solar panels
     # l : width
-    # alpha : inclination angle in °, 0 flat on ground 90°
+    # alpha : inclination angle in °, 0 flat on ground 90° standing
     # beta : orientation towards south, 0° full South, 90° East
     # eta : efficiency of panel [0;1]
     # lat : latitude of building
     # weather : solar radiation energy per hour in a year [Wh/m^2]
 
-    alpha = (np.pi/2 - alpha) * np.pi / 180
+    alpha = alpha * np.pi / 180
     beta = beta * np.pi / 180
 
     phi = lat / 180 * np.pi
 
-    day = np.arange(1, 366)
+    day = np.arange(0, 365)
     deltas = 23.45 * np.sin(2 * np.pi * ((day - 81) / 365)) / 180 * np.pi
     hour = np.arange(0, 24)
     h = np.zeros(0)
     a = h
-    for i in day - 1:
+    for i in day:
         hd = np.arcsin(
             np.sin(phi) * np.sin(deltas[i]) + np.cos(phi) * np.cos(deltas[i]) * np.cos(15 * (hour - 12) / 180 * np.pi))
         h = np.append(h, hd)
@@ -34,7 +34,7 @@ def CalcEnergy(L, l, alpha, beta, eta, lat, weather):
 
     for i in range(len(a)):
         if i == len(a) - 1:
-            print("modifing last value")
+            #print("modifing last value")
             a[i] = np.pi / 2
         elif a[i] > a[i + 1]:
             a[i] = np.pi / 2
@@ -56,7 +56,7 @@ def CalcEnergy(L, l, alpha, beta, eta, lat, weather):
     # Solar panel shadow calculation
     hp = L * np.sin(alpha) + L * np.cos(alpha) * np.tan(h)
     lp = l * np.sin(beta + np.pi / 2 - a)
-    s = np.multiply(hp, lp)
+    s = np.clip(np.multiply(hp, lp),0,None)
 
     # Energy produced
     e = np.multiply(s, weather) * eta
