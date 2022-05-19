@@ -18,6 +18,7 @@ class Solar_Panel(QWidget):
         self._orientation_angle = orientation_angle
         self._length = length
         self._width = _width
+        self._halfdiag = np.sqrt(self._length**2 + self._width**2)/2
 
         layout = QHBoxLayout(self)
 
@@ -30,6 +31,8 @@ class Solar_Panel(QWidget):
         self.side_widget.getPlotItem().getViewBox().setLimits(
             xMin=-10, xMax=self._length + 10, yMin=-10, yMax=self._length + 10)
         self.side_widget.setMouseEnabled(x=False, y=False)
+        self.side_widget.setXRange(0,self._length)
+        self.side_widget.setYRange(0,self._length)
         self.side_plot: pg.PlotDataItem = self.side_widget.plot(
             [0., np.cos(self._inclination_angle*np.pi/180)*self._length],
             [0., np.sin(self._inclination_angle*np.pi/180)*self._length],
@@ -46,8 +49,8 @@ class Solar_Panel(QWidget):
         #Widget Top View
 
         self.top_widget = pg.PlotWidget(name='Top View')
-        self.top_widget.getPlotItem().getViewBox().setLimits(
-           xMin=-self._length/2 - 10, xMax=self._length/2 + 10, yMin=-self._length/2 - 10, yMax=self._length/2 + 10)
+        self.top_widget.setXRange(-self._halfdiag,self._halfdiag)
+        self.top_widget.setYRange(-self._halfdiag,self._halfdiag)
         self.top_widget.setMouseEnabled(x=False, y=False)
         self.top_widget.showGrid(x=True, y=True)
         self.top_widget.setTitle(
@@ -97,12 +100,14 @@ class Solar_Panel(QWidget):
 
     def _replot(self) -> None:
 
+        self._halfdiag = np.sqrt(self._length**2 + self._width**2)
         #Update Side
 
         self.side_plot.setData([0., np.cos(self._inclination_angle*np.pi/180)*self._length], [0., np.sin(self._inclination_angle*np.pi/180)*self._length])
         self.side_widget.setTitle('Side View -- Inclination: ' + str(self._inclination_angle) + '°')
         self.side_widget.getPlotItem().getViewBox().setLimits(xMin=-10, xMax=self._length + 10, yMin=-10, yMax=self._length + 10)
-        
+        self.side_widget.setXRange(0,self._length)
+        self.side_widget.setYRange(0,self._length)
         #Update Rotation
 
         p1 = np.array([-1*self._width/2, -1*np.cos(self._inclination_angle*np.pi/180)*self._length/2])
@@ -121,13 +126,15 @@ class Solar_Panel(QWidget):
         #Update Top
 
         self.curve.setData(x_tot, y_tot)
-        self.top_widget.getPlotItem().getViewBox().setLimits(xMin=-self._length/2 - 10, xMax=self._length/2 + 10, yMin=-self._length/2 - 10, yMax=self._length/2 + 10)
         self.top_widget.setTitle('Top View -- Orientation: ' + str(self._orientation_angle) + '°')
-
+        
+        self.top_widget.setXRange(-self._halfdiag,self._halfdiag)
+        self.top_widget.setYRange(-self._halfdiag,self._halfdiag)
+        
         self.__arrow_angle = 90 + self._orientation_angle
         self.arrow.setStyle(angle=self.__arrow_angle)
         
-        self.arrow_north.setPos(self._length/2, self._length/2)
+        self.arrow_north.setPos(self._halfdiag*2/3, self._halfdiag*2/3)
 
         return
 

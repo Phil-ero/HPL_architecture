@@ -87,23 +87,19 @@ def heatedLiters(temp0:float,temp1:float,energy:float) -> float:
     return energy/(delta_T * c_th)
 
 def tankSatisfaction(temp0:float,temp1:float,litersWanted:float,tankCap:float,energies:typing.List[float]) \
-    -> typing.Tuple[typing.List[float],typing.List[float],typing.List[float],typing.List[float],typing.List[float]]:
+    -> typing.Tuple[typing.List[float],typing.List[float]]:
     
     tankValues:typing.List[float] = [0]*(len(energies)+1)
-    overflowValues:typing.List[float] = [0]*(len(energies))
-    missingSatisfaction:typing.List[float] = [0]*len(energies)
     producedPerDay:typing.List[float] = [heatedLiters(temp0,temp1,e) for e in energies]
     deltaProdSatisfaction:typing.List[float] = [p - litersWanted for p in producedPerDay]
     
     for i in range(len(energies)):
         if deltaProdSatisfaction[i] >= 0:
             tankValues[i+1] = min([tankCap,tankValues[i]+deltaProdSatisfaction[i]])
-            overflowValues[i] = max([0,tankValues[i+1]-tankCap])
         else:
             tankValues[i+1] = max([0,tankValues[i]+deltaProdSatisfaction[i]])
-            missingSatisfaction[i] = -min([0,tankValues[i]+deltaProdSatisfaction[i]])
             
-    return overflowValues,deltaProdSatisfaction,missingSatisfaction,tankValues,producedPerDay
+    return tankValues,producedPerDay
     
     
     

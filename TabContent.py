@@ -14,18 +14,6 @@ from ParametersWidget import OrientationWidget,HBoxSlider
 from Solarvizu import Solar_Panel
 from ResultsWidget import ResultsWidget
 
-class Color(QWidget):
-    
-    def __init__(self, *color) -> None:
-        super().__init__()
-        self.setAutoFillBackground(True)
-
-        palette = self.palette()
-        palette.setColor(QPalette.Window, QColor(*color))
-        self.setPalette(palette)
-        self.setMinimumWidth(300)
-        self.setMinimumHeight(200)
-
 class TabContent(QWidget):
 
     ##### Build the widget #####
@@ -53,6 +41,7 @@ class TabContent(QWidget):
         self.latitudeWidget.slider.setValue(46204)
         self.latitudeWidget.valueChanged.connect(self._latitude_handler)
         self.longitudeWidget = HFloatSlider(-180000,180000,3,"Longitude","°")
+        self.longitudeWidget.slider.setValue(6143)
         self.longitudeWidget.valueChanged.connect(self._longitude_handler)
         
         # Layout
@@ -87,10 +76,10 @@ class TabContent(QWidget):
         self.orientationAngleWidget.slider.setValue(145)
         self.orientationAngleWidget.valueChanged.connect(self._orientation_angle_handler)
         
-        self.solarPanelWidthWidget = HBoxSlider(1,500,1,"Width:","cm")
+        self.solarPanelWidthWidget = HBoxSlider(1,1000,1,"Width:","cm")
         self.solarPanelWidthWidget.valueChanged.connect(self._width_handler)
         
-        self.solarPanelHeightWidget = HBoxSlider(1,500,1,"Height:","cm")
+        self.solarPanelHeightWidget = HBoxSlider(1,1000,1,"Height:","cm")
         self.solarPanelHeightWidget.valueChanged.connect(self._height_handler)
         
         self.solarPanelEfficiencyWidget = HBoxSlider(1,100,1,"Efficiency",'%')
@@ -116,16 +105,18 @@ class TabContent(QWidget):
         
         # Declare widgets and connect them
         self.boilerConsumptionWidget = VBoxSlider(0,500,1,"Hot water consumption", "L/day")
+        self.boilerConsumptionWidget.slider.setValue(80)
         self.boilerConsumptionWidget.valueChanged.connect(self._water_consumption_handler)
         
         self.boilerTemperaturesWidget = VRangeSlider(0,100,1,"Water output temperature", "Water input temperature","°C")
+        self.boilerTemperaturesWidget.slider.setValue((10,35))
         self.boilerTemperaturesWidget.valueChanged.connect(self._water_temperature_handler)
         
         self.boilerCapEnableWidget = QCheckBox("Hot water storage tank")
         self.boilerCapEnableWidget.setChecked(False)
         self.boilerCapEnableWidget.toggled.connect(self._boiler_capacity_enable_handler)
         
-        self.boilerCapacityWidget = HBoxSlider(0,500,1,"Tank's capacity", "L")
+        self.boilerCapacityWidget = HBoxSlider(1,500,1,"Tank's capacity", "L")
         self.boilerCapacityWidget.setDisabled(True)
         self.boilerCapacityWidget.valueChanged.connect(self._boiler_capacity_handler)
         
@@ -192,6 +183,7 @@ class TabContent(QWidget):
         return
     
     def _longitude_handler(self) -> None:
+        self.resultsWidget.energyWidget.update_longitude(self.longitudeWidget.value())
         return
     
     def _energy_received_handler(self) -> None:
@@ -240,7 +232,7 @@ class TabContent(QWidget):
         return
     
     def _boiler_capacity_handler(self) -> None:
-        self.resultsWidget.satisfactionWidget.update_water_tank(self.boilerCapEnableWidget.isEnabled(),self.boilerCapacityWidget.value())
+        self.resultsWidget.satisfactionWidget.update_water_tank(self.boilerCapEnableWidget.isChecked(),self.boilerCapacityWidget.value())
         return
         
 def test():
