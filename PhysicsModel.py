@@ -3,11 +3,11 @@ from scipy.spatial.transform import Rotation as R
 import typing
 import time
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 
-import pytz
-from tzwhere import tzwhere
-tzWhere = tzwhere.tzwhere(forceTZ=True)
+#import pytz
+#from tzwhere import tzwhere
+#tzWhere = tzwhere.tzwhere(forceTZ=True)
 
 def Calc3DEnergy(length: float, width: float, inclination: float, orientation: float, efficiency: float, latitude: float, longitude: float, dates: typing.List[datetime], weather: typing.List[float]) -> typing.List[float]:
     # length, width in meters
@@ -23,10 +23,11 @@ def Calc3DEnergy(length: float, width: float, inclination: float, orientation: f
     # 1st step : compute sun's position in the sky
     fst_start = time.perf_counter()
 
-    tzName = tzWhere.tzNameAt(latitude, longitude, forceTZ=True)
-    timezone = pytz.timezone(tzName)
+    #tzName = tzWhere.tzNameAt(latitude, longitude, forceTZ=True)
+    #timezone = pytz.timezone(tzName)
     
-    timeDelta = timezone.utcoffset(dates[0])
+    #timeDelta = timezone.utcoffset(dates[0])
+    timeDelta = -timedelta(hours=2)
     utc_dates = [d + timeDelta for d in dates]
     sun_positions = np.array([sunpos(
         (d.year, d.month, d.day, d.hour, 0, 0, 0), (latitude, longitude)) for d in utc_dates])
@@ -67,8 +68,11 @@ def Calc3DEnergy(length: float, width: float, inclination: float, orientation: f
     y_coeffs = np.sin(sun_azimuths)
     z_coeffs = np.sin(sun_altitudes)
 
-    t_other_base_values = np.divide(-other_base_vertex[2], z_coeffs)
-    t_top_values = np.divide(-top_vertex[2], z_coeffs)
+    t_other_base_values = -other_base_vertex[2] / z_coeffs
+    t_top_values = -top_vertex[2] / z_coeffs
+    
+    t_other_base_values[np.logical_not(np.isfinite(t_other_base_values))] = 0
+    t_top_values[np.logical_not(np.isfinite(t_top_values))] = 0
 
     
     other_base_vertex_projs = np.transpose(np.array([np.multiply(x_coeffs, t_other_base_values), np.multiply(
@@ -97,7 +101,6 @@ def Calc3DEnergy(length: float, width: float, inclination: float, orientation: f
     #areas = np.array([np.linalg.det(s) for s in stacks])
     areas = np.linalg.det(stacks)
     areas = np.multiply(areas, well_oriented)
-    areas[np.isnan(areas)] = 0
     areas = np.abs(areas)
     
 

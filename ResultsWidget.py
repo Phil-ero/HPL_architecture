@@ -391,10 +391,16 @@ class SerieBreakdown(QFrame):
         
     def update(self,s:typing.List[float]):
         self.serie = s
-        self.minVal = float(min(self.serie))
-        self.maxVal = float(max(self.serie))
-        self.avgVal = float(mean(self.serie))
-        self.stdVal = float(np.std(self.serie))
+        try:
+            self.minVal = float(min(self.serie))
+            self.maxVal = float(max(self.serie))
+            self.avgVal = float(mean(self.serie))
+            self.stdVal = float(np.std(self.serie))
+        except:
+            self.minVal = float('nan')
+            self.maxVal = float('nan')
+            self.avgVal = float('nan')
+            self.stdVal = float('nan')
         
         if self.unit:
             if self.minVal > 10**9:
@@ -486,12 +492,22 @@ class AdditionalFeedback(QScrollArea):
         
     def update_panelSatisfaction(self,l:typing.List[float]):
         self.panelSatisfactionPerDay = l
-        self.totalSatisfactionPerDay: typing.List[float] = np.array(self.panelSatisfactionPerDay) + np.array(self.tankEmptyPerDay)
+        a1 = np.array(self.panelSatisfactionPerDay)
+        a2 = np.array(self.tankEmptyPerDay)
+        if a1.shape == a2.shape:
+            self.totalSatisfactionPerDay = a1 + a2
+        else:
+            self.totalSatisfactionPerDay = a1
         self.satisfactionWidget.update(self.totalSatisfactionPerDay)
         
     def update_tankEmpty(self,l:typing.List[float]):
         self.tankEmptyPerDay = l
-        self.totalSatisfactionPerDay: typing.List[float] = np.array(self.panelSatisfactionPerDay) + np.array(self.tankEmptyPerDay)
+        a1 = np.array(self.panelSatisfactionPerDay)
+        a2 = np.array(self.tankEmptyPerDay)
+        if a1.shape == a2.shape:
+            self.totalSatisfactionPerDay = a1 + a2
+        else:
+            self.totalSatisfactionPerDay = a1
         self.satisfactionWidget.update(self.totalSatisfactionPerDay)
         
     def update_wasted(self,l:typing.List[float]):

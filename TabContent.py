@@ -85,9 +85,11 @@ class TabContent(QWidget):
         self.orientationAngleWidget.valueChanged.connect(self._orientation_angle_handler)
         
         self.solarPanelWidthWidget = HBoxSlider(1,1000,1,"Width:","cm")
+        self.solarPanelWidthWidget.slider.setValue(300)
         self.solarPanelWidthWidget.valueChanged.connect(self._width_handler)
         
         self.solarPanelHeightWidget = HBoxSlider(1,1000,1,"Height:","cm")
+        self.solarPanelHeightWidget.slider.setValue(100)
         self.solarPanelHeightWidget.valueChanged.connect(self._height_handler)
         
         self.solarPanelEfficiencyWidget = HBoxSlider(1,100,1,"Efficiency",'%')
