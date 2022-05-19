@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QWidget, QGroupBox, QGridLayout, QFormLayout, QLabel, QSizePolicy,\
-    QHBoxLayout, QApplication, QMainWindow, QFrame
+from statistics import mean
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGridLayout, QFormLayout, QLabel, QSizePolicy,\
+    QHBoxLayout, QApplication, QMainWindow, QFrame, QScrollArea
 from PyQt5.QtGui import QPalette, QColor, QRgba64
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5 import QtCore
@@ -351,54 +352,152 @@ class SatisfactionWidget(QWidget):
 
 
 #################### Additional feedback ####################
+class SerieBreakdown(QFrame):
+    def __init__(self, serie:typing.List[float], name:str, unit:str=None, parent: typing.Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+        
+        # Declare attributes
+        self.serie:typing.List[float] = serie
+        self.unit = unit
+        
+        self.minVal:float 
+        self.maxVal:float 
+        self.avgVal:float 
+        self.stdVal:float 
+        
+        # Declare widgets
+        
+        layout = QHBoxLayout(self)
+        layout.addWidget(QLabel(name,self))
+        subwidget = QWidget(self)
+        
+        sublayout = QFormLayout(subwidget)
+        
+        self.rangeLabel = QLabel(subwidget)
+        self.avgLabel = QLabel(subwidget)
+        
+        sublayout.addRow("- [Min,Max]:",self.rangeLabel)
+        sublayout.addRow("- Average ± σ:",self.avgLabel)
+        
+        subwidget.setLayout(sublayout)
+        
+        layout.addWidget(subwidget)
+        self.setLayout(layout)
+        
+        # Update values
+        self.update(serie)
+        
+        self.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.Minimum)
+        
+    def update(self,s:typing.List[float]):
+        self.serie = s
+        self.minVal = float(min(self.serie))
+        self.maxVal = float(max(self.serie))
+        self.avgVal = float(mean(self.serie))
+        self.stdVal = float(np.std(self.serie))
+        
+        if self.unit:
+            if self.minVal > 10**9:
+                self.rangeLabel.setText(f"[ {self.minVal/10**9:.2f} , {self.maxVal/10**9:.2f} ] G{self.unit}")
+                self.avgLabel.setText(f"{self.avgVal/10**9:.2f} ± {self.stdVal/10**9:.2f} G{self.unit}")
+            elif self.minVal > 10**6:
+                self.rangeLabel.setText(f"[ {self.minVal/10**6:.2f} , {self.maxVal/10**6:.2f} ] M{self.unit}")
+                self.avgLabel.setText(f"{self.avgVal/10**6:.2f} ± {self.stdVal/10**6:.2f} M{self.unit}")
+            elif self.minVal > 10**3:
+                self.rangeLabel.setText(f"[ {self.minVal/10**3:.2f} , {self.maxVal/10**3:.2f} ] k{self.unit}")
+                self.avgLabel.setText(f"{self.avgVal/10**3:.2f} ± {self.stdVal/10**3:.2f} k{self.unit}")
+            else:
+                self.rangeLabel.setText(f"[ {self.minVal:.2f} , {self.maxVal:.2f} ] {self.unit}")
+                self.avgLabel.setText(f"{self.avgVal:.2f} ± {self.stdVal:.2f} {self.unit}")
+        else:
+            self.rangeLabel.setText(f"[ {self.minVal*100:.2f} , {self.maxVal*100:.2f} %]")
+            self.avgLabel.setText(f"{self.avgVal*100:.2f} ± {self.stdVal*100:.2f} %")
+        
 
-
-class AdditionalFeedback(QFrame):
+class AdditionalFeedback(QScrollArea):
     def __init__(self, parent: typing.Optional['QWidget'] = None) -> None:
         super().__init__(parent)
+        
+        self.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         
         self.setFrameStyle(1) # Box style
         
         # Get parameters
         
+        self.energyPerDay: typing.List[float] = [0]*365  # Wh
+
         self.panelPerDay: typing.List[float] = [0]*365 # L
         self.tankVolumePerDay: typing.List[float] = [0]*365  # L
         self.wastedPerDay: typing.List[float] = [0]*365 # Percentage
         self.tankFillPerDay: typing.List[float] = [0]*365 # Percentage
         self.tankEmptyPerDay: typing.List[float] = [0]*365 # Percentage
         self.panelSatisfactionPerDay: typing.List[float] = [0]*365 # Percentage
-
-        layout = QFormLayout(self)
-
-        # Declare different values
-        self.totalEnergy: float = 0.0
-
-        self.avgEnergy: float = 0.0
-        self.avgEnergyLabel = QLabel(f"{self.avgEnergy:.2} Wh/day", self)
-
-        self.missingEnergy: float = 0.0
-        self.missingEnergyLabel = QLabel(f"{self.missingEnergy:.2} Wh", self)
-
-        self.missingWater: float = 0.0
-        self.missingWaterLabel = QLabel(f"{self.missingWater:.2} L", self)
-
-        self.overflowedEnergy: float = 0.0
-        self.overflowedEnergyLabel = QLabel(
-            f"{self.overflowedEnergy:.2} Wh", self)
-
-        self.overflowedProportion: float = 0.0
-        self.overflowedProportionLabel = QLabel(
-            f"{self.overflowedProportion:2.2%}", self)
         
-        #self.tankData
+        self.totalSatisfactionPerDay: typing.List[float] = np.array(self.panelSatisfactionPerDay) + np.array(self.tankEmptyPerDay)
 
+        # Declare wwidgets
+        layout = QVBoxLayout(self)
+        
+        titleWidget = QFrame(self)
+        titleLayout = QGridLayout(titleWidget)
+        titleText = QLabel("Breakdown of several daily quantities",titleWidget)
+        titleText.setStyleSheet("font-weight: bold")
+        titleLayout.addWidget(titleText)
+        titleWidget.setFrameShape(0x6)
+    
+        self.energyWidget = SerieBreakdown(self.energyPerDay,"Energy produced", "Wh",self)
+        self.energyWidget.setFrameShape(0x6) 
+        self.volumeProducedWidget = SerieBreakdown(self.panelPerDay,"Volume of hot water produced", "L",self)
+        self.volumeProducedWidget.setFrameShape(0x6)
+        self.tankVolumeWidget = SerieBreakdown(self.tankVolumePerDay,"Volume of hot water in the tank", "L",self)
+        self.tankVolumeWidget.setFrameShape(0x6)
+        self.satisfactionWidget = SerieBreakdown(self.totalSatisfactionPerDay, "Satisfaction",parent=self)
+        self.satisfactionWidget.setFrameShape(0x6)
+        self.wastedWidget = SerieBreakdown(self.wastedPerDay, "Proportion of produced water wasted ",parent=self)
+        self.wastedWidget.setFrameShape(0x6)
+        
         # Add them to layout
-        layout.addRow("Average energy produced per day", self.avgEnergyLabel)
-        layout.addRow("Quantity of energy missing", self.missingEnergyLabel)
-        layout.addRow("Liters of hot water missing", self.missingWaterLabel)
-        layout.addRow("Wasted energy", self.overflowedEnergyLabel)
-        layout.addRow("Wasted energy (proportion)",
-                      self.overflowedProportionLabel)
+        layout.addWidget(titleWidget)
+        layout.addWidget(self.energyWidget)
+        layout.addWidget(self.volumeProducedWidget)
+        layout.addWidget(self.tankVolumeWidget)
+        layout.addWidget(self.satisfactionWidget)
+        layout.addWidget(self.wastedWidget)
+        
+        container = QWidget()
+        container.setLayout(layout)
+        self.setWidget(container)
+        
+        #self.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.MinimumExpanding) 
+    
+    
+    def update_energyPerDay(self,l:typing.List[float]):
+        self.energyPerDay = l
+        self.energyWidget.update(l)
+        
+    def update_panelPerDay(self,l:typing.List[float]):
+        self.panelPerDay = l
+        self.volumeProducedWidget.update(l)
+        
+    def update_tankVolumePerDay(self,l:typing.List[float]):
+        self.tankVolumePerDay = l
+        self.tankVolumeWidget.update(l)
+        
+    def update_panelSatisfaction(self,l:typing.List[float]):
+        self.panelSatisfactionPerDay = l
+        self.totalSatisfactionPerDay: typing.List[float] = np.array(self.panelSatisfactionPerDay) + np.array(self.tankEmptyPerDay)
+        self.satisfactionWidget.update(self.totalSatisfactionPerDay)
+        
+    def update_tankEmpty(self,l:typing.List[float]):
+        self.tankEmptyPerDay = l
+        self.totalSatisfactionPerDay: typing.List[float] = np.array(self.panelSatisfactionPerDay) + np.array(self.tankEmptyPerDay)
+        self.satisfactionWidget.update(self.totalSatisfactionPerDay)
+        
+    def update_wasted(self,l:typing.List[float]):
+        self.wastedPerDay = l
+        self.wastedWidget.update(l)
+        
 
 
 #################### Main results widget ####################
@@ -416,6 +515,7 @@ class ResultsWidget(QWidget):
         self.additionalFeedbackWidget = AdditionalFeedback()
 
         self.energyWidget.valueChanged.connect(self._energies_handler)
+        self.satisfactionWidget.valueChanged.connect(self._satisfactionWidget_handler)
 
         layout.addWidget(self.energyWidget)
         layout.addWidget(self.satisfactionWidget)
@@ -426,6 +526,34 @@ class ResultsWidget(QWidget):
     def _energies_handler(self) -> None:
         self.satisfactionWidget.update_energyPerDay(
             self.energyWidget.energyPerDay)
+        self.additionalFeedbackWidget.update_energyPerDay(self.energyWidget.energyPerDay)
+        
+    def _panelPerDay_handler(self) -> None:
+        self.additionalFeedbackWidget.update_panelPerDay(self.satisfactionWidget.panelPerDay)
+        
+    def _tankVolumePerday_handler(self) -> None:
+        self.additionalFeedbackWidget.update_tankVolumePerDay(self.satisfactionWidget.tankVolumePerDay)
+        
+    def _panelSatisfaction_handler(self) -> None:
+        self.additionalFeedbackWidget.update_panelSatisfaction(self.satisfactionWidget.panelSatisfactionPerDay)
+        
+    def _tankEmpty_handler(self) -> None:
+        self.additionalFeedbackWidget.update_tankEmpty(self.satisfactionWidget.tankEmptyPerDay)
+        
+    def _tankFill_handler(self) -> None:
+        #self.satisfactionWidget.tankFillPerDay
+        return
+    
+    def _wasted_handler(self) -> None:
+        self.additionalFeedbackWidget.update_wasted(self.satisfactionWidget.wastedPerDay)
+    
+    def _satisfactionWidget_handler(self) -> None:
+        self._panelPerDay_handler()
+        self._tankVolumePerday_handler()
+        self._panelSatisfaction_handler()
+        self._tankEmpty_handler()
+        self._tankFill_handler()
+        self._wasted_handler()
 
 
 def test():
