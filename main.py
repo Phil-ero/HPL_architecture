@@ -3,7 +3,6 @@
 import sys
 import typing
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QTabWidget, QMenuBar, QLabel
-from PyQt5 import QtCore
 from PyQt5.QtGui import QPalette, QColor, QRgba64
 
 from TabContent import TabContent

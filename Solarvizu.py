@@ -1,5 +1,4 @@
 import sys
-from turtle import width
 import pyqtgraph as pg
 import numpy as np
 import typing
@@ -43,8 +42,8 @@ class Solar_Panel(QWidget):
             'Inclination: ' + str(self._inclination_angle) + '°')
         self.side_widget.setLabel('bottom', "Length")
         self.side_widget.setLabel('left', "Height")
-        self.side_widget.setMinimumWidth(200)
-        self.side_widget.setMinimumHeight(200)
+        #self.side_widget.setMinimumWidth(200)
+        #self.side_widget.setMinimumHeight(200)
 
         #Widget Top View
 
@@ -57,8 +56,8 @@ class Solar_Panel(QWidget):
            'Orientation: ' + str(self._orientation_angle) + '°')
         self.top_widget.setLabel('bottom', "Width")
         self.top_widget.setLabel('left', "Length")
-        self.top_widget.setMinimumWidth(200)
-        self.top_widget.setMinimumHeight(200)
+        #self.top_widget.setMinimumWidth(200)
+        #self.top_widget.setMinimumHeight(200)
 
         #Rotation of Top view and Curve
 

@@ -1,14 +1,13 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import typing
-import pytz
 import time
-from tzwhere import tzwhere
 import math
 from datetime import datetime
 
+import pytz
+from tzwhere import tzwhere
 tzWhere = tzwhere.tzwhere(forceTZ=True)
-
 
 def Calc3DEnergy(length: float, width: float, inclination: float, orientation: float, efficiency: float, latitude: float, longitude: float, dates: typing.List[datetime], weather: typing.List[float]) -> typing.List[float]:
     # length, width in meters

@@ -2,12 +2,9 @@ import typing
 import pyqtgraph as pg
 import csv
 import sys
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QLabel, QHBoxLayout, QWidget, QApplication, QVBoxLayout,\
     QSizePolicy, QFileDialog, QPushButton, QGridLayout
 from datetime import datetime
-import numpy as np
 
 
 def loadMeteoCSV(file: str) -> typing.Tuple[typing.List[datetime], typing.List[int]]:
@@ -87,10 +84,11 @@ class MonthMeteoWidget(QWidget):
         monthPlotItem.enableAutoRange()
         monthPlotItem.setLabel("left", "Energy per meter squared", "Wh/m^2")
         monthPlotItem.setLabel("bottom", "Month")
-        monthPlotItem.addItem(pg.BarGraphItem(
+        self.barGraph = pg.BarGraphItem(
             x=range(1, len(monthDates)+1), y1=monthEnergies, width=1,
             pen=pg.mkPen(pg.mkColor((98,58,23,200)),width=2),
-            brush=pg.mkBrush(pg.mkColor((239,142,56,255)))))
+            brush=pg.mkBrush(pg.mkColor((239,142,56,255))))
+        monthPlotItem.addItem(self.barGraph)
         monthPlotItem.getViewBox().setMouseEnabled(x=False, y=False)
         monthWidget.setFixedHeight(300)
         monthWidget.setFixedWidth(400)
@@ -99,6 +97,12 @@ class MonthMeteoWidget(QWidget):
                                   QSizePolicy.Policy.Minimum)
 
         layout.addWidget(monthWidget, 0, 0, 2, 2)
+        
+    def update(self,data_path:str):
+        dates, energies = loadMeteoCSV(data_path)
+        monthDates, monthEnergies = aggregateByMonth(dates, energies)
+        self.barGraph.setOpts(x=range(1, len(monthDates)+1), y1=monthEnergies)
+        
         
 class DayMeteoWidget(QWidget):
     def __init__(self, data_path: str, parent: typing.Optional['QWidget'] = None) -> None:
@@ -116,18 +120,26 @@ class DayMeteoWidget(QWidget):
         dayPlotItem.enableAutoRange()
         dayPlotItem.setLabel("left", "Energy per meter squared", "Wh/m^2")
         dayPlotItem.setLabel("bottom", "day")
-        dayPlotItem.addItem(pg.BarGraphItem(
+        self.barGaph = pg.BarGraphItem(
             x=range(1, len(dayDates)+1), y1=dayEnergies, width=1,
             pen=pg.mkPen(pg.mkColor((62,37,14,255)),width=1/30),
-            brush=pg.mkBrush(pg.mkColor((242,145,56,200)))))
+            brush=pg.mkBrush(pg.mkColor((242,145,56,200))))
+        dayPlotItem.addItem(self.barGaph)
         dayPlotItem.getViewBox().setMouseEnabled(x=False, y=False)
-        dayWidget.setMinimumHeight(300)
-        dayWidget.setMinimumWidth(300)
+        #dayWidget.setMinimumHeight(300)
+        #dayWidget.setMinimumWidth(300)
 
         dayWidget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,
                                   QSizePolicy.Policy.MinimumExpanding)
 
         layout.addWidget(dayWidget, 0, 0, 2, 2)
+        
+    def update(self,data_path:str):
+        dates, energies = loadMeteoCSV(data_path)
+        dayDates, dayEnergies = aggregateByDay(dates, energies)
+        
+        self.barGaph.setOpts(x=range(1, len(dayDates)+1), y1=dayEnergies)
+        
     
 
 

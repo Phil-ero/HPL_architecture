@@ -1,10 +1,7 @@
-import sys
+import sys, os
 import typing
 from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow, QPushButton, QLabel,\
-    QTabWidget, QVBoxLayout, QSizePolicy, QCheckBox
-from PyQt5.QtGui import QPalette, QColor, QRgba64
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+    QTabWidget, QVBoxLayout, QSizePolicy, QCheckBox, QFileDialog
 import pyqtgraph as pg
 
 from ParametersWidget import ParametersWidget, HBoxSlider, VBoxSlider, VRangeSlider, HFloatSlider, VFloatSlider
@@ -57,7 +54,18 @@ class TabContent(QWidget):
         ## Meteo
         meteoSection = Section(title="Meteo",parent=self)
         meteoSectionLayout = QGridLayout(meteoSection.contentArea)
-        meteoSectionLayout.addWidget(MonthMeteoWidget(self.meteo_file))
+        self.meteoWidget = MonthMeteoWidget(self.meteo_file)
+        meteoSectionLayout.addWidget(self.meteoWidget,0,0,2,2)
+        
+        self.meteoFileLabel = QLabel(f"Current file: {os.path.basename(self.meteo_file)}")
+        meteoFileButton = QPushButton("Select new meteo file", self)
+        
+        meteoFileButton.clicked.connect(self._getfile)
+        
+        meteoSectionLayout.addWidget(meteoFileButton,2,0,1,1)
+        meteoSectionLayout.addWidget(self.meteoFileLabel,2,1,1,1)
+        
+        
         meteoSection.setContentLayout(meteoSectionLayout)
         
         meteoSection.setMinimumWidth(meteoSectionLayout.itemAt(0).widget().sizeHint().width())
@@ -163,6 +171,20 @@ class TabContent(QWidget):
         self._update_all()
         
     ##### Slots (signal handlers) #####    
+    
+    def _getfile(self) -> None:
+        returned = QFileDialog.getOpenFileName(self,"Select meteo file",".","CSV file (*.csv)")
+        if returned:
+            self.meteo_file = returned[0]
+        
+        #print(returned)
+        self.meteoFileLabel.setText(f"Current file: {os.path.basename(self.meteo_file)}")
+        self.meteo_dates,self.meteo_energies = loadMeteoCSV(self.meteo_file)
+        
+        self.dayMeteoWidget.update(self.meteo_file)
+        self.meteoWidget.update(self.meteo_file)
+        self._energy_received_handler()
+        
     
     def _update_all(self) -> None:
         self._latitude_handler()
