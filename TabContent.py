@@ -2,6 +2,7 @@ import sys, os
 import typing
 from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow, QPushButton, QLabel,\
     QTabWidget, QVBoxLayout, QSizePolicy, QCheckBox, QFileDialog
+from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 
 from ParametersWidget import ParametersWidget, HBoxSlider, VBoxSlider, VRangeSlider, HFloatSlider, VFloatSlider
@@ -34,6 +35,8 @@ class TabContent(QWidget):
         localisationLayout = QGridLayout(localisationSection.contentArea)
         
         # Widgets
+        self.backToGenevaButton = QPushButton("Back to Geneva!",parent=localisationSection)
+        self.backToGenevaButton.clicked.connect(self._back_to_geneva)
         self.latitudeWidget = VFloatSlider(-90000,90000,3,"Latitude","°")
         self.latitudeWidget.slider.setValue(46204)
         self.latitudeWidget.valueChanged.connect(self._latitude_handler)
@@ -42,9 +45,9 @@ class TabContent(QWidget):
         self.longitudeWidget.valueChanged.connect(self._longitude_handler)
         
         # Layout
-        
-        localisationLayout.addWidget(self.latitudeWidget,1,0,2,1)
-        localisationLayout.addWidget(self.longitudeWidget,0,0,1,2)
+        localisationLayout.addWidget(self.backToGenevaButton,0,0,1,2)
+        localisationLayout.addWidget(self.latitudeWidget,2,0,2,1)
+        localisationLayout.addWidget(self.longitudeWidget,1,0,1,2)
         localisationSection.setContentLayout(localisationLayout)
         localisationSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
         
@@ -92,6 +95,9 @@ class TabContent(QWidget):
         self.solarPanelHeightWidget.slider.setValue(100)
         self.solarPanelHeightWidget.valueChanged.connect(self._height_handler)
         
+        self.solarPanelSurfaceWidget = QLabel("\t Solar panel's surface: 3 m²")
+        self.solarPanelSurfaceWidget.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
         self.solarPanelEfficiencyWidget = HBoxSlider(1,100,1,"Efficiency",'%')
         self.solarPanelEfficiencyWidget.valueChanged.connect(self._efficiency_handler)
         
@@ -100,6 +106,7 @@ class TabContent(QWidget):
         solarPanelLayout.addWidget(self.orientationAngleWidget)
         solarPanelLayout.addWidget(self.solarPanelWidthWidget)
         solarPanelLayout.addWidget(self.solarPanelHeightWidget)
+        solarPanelLayout.addWidget(self.solarPanelSurfaceWidget)
         solarPanelLayout.addWidget(self.solarPanelEfficiencyWidget)
         solarPanelSection.setContentLayout(solarPanelLayout)
         solarPanelSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
@@ -126,7 +133,7 @@ class TabContent(QWidget):
         self.boilerCapEnableWidget.setChecked(False)
         self.boilerCapEnableWidget.toggled.connect(self._boiler_capacity_enable_handler)
         
-        self.boilerCapacityWidget = HBoxSlider(1,500,1,"Tank's capacity", "L")
+        self.boilerCapacityWidget = HBoxSlider(1,5000,1,"Tank's capacity", "L")
         self.boilerCapacityWidget.setDisabled(True)
         self.boilerCapacityWidget.valueChanged.connect(self._boiler_capacity_handler)
         
@@ -142,7 +149,7 @@ class TabContent(QWidget):
         parameterWidgetsList.append(boilerSection)
         
         # Finally build the stack and put it in the layout
-        self.layout.addWidget(ParametersWidget(parameterWidgetsList,self),0,0,3,1)
+        self.layout.addWidget(ParametersWidget(parameterWidgetsList,self),0,0,1,1)
         
     
     def __init__(self, meteo_file:str, parent: typing.Optional['QWidget'] = None) -> None:
@@ -163,8 +170,8 @@ class TabContent(QWidget):
         self.resultsWidget = ResultsWidget()
         
         self._MakeParameterWidgets("This is the intro text")
-        self.layout.addWidget(mainVisuTabs,0,1,3,3)
-        self.layout.addWidget(self.resultsWidget,3,0,2,4)
+        self.layout.addWidget(mainVisuTabs,0,1,1,2)
+        self.layout.addWidget(self.resultsWidget,1,0,2,4)
         #self.layout.addWidget(QPushButton("Submit"),5,3,1,1)
         self.setLayout(self.layout)
         
@@ -202,6 +209,12 @@ class TabContent(QWidget):
         self._boiler_capacity_enable_handler()
         self._boiler_capacity_handler()
     
+    def _back_to_geneva(self) -> None:
+        self.latitudeWidget.slider.setValue(46204)
+        self.longitudeWidget.slider.setValue(6143)
+        self._latitude_handler()
+        self._longitude_handler()
+    
     def _latitude_handler(self) -> None:
         self.resultsWidget.energyWidget.update_latitude(self.latitudeWidget.value())
         return
@@ -227,12 +240,21 @@ class TabContent(QWidget):
     def _height_handler(self) -> None:
         self.solarPanel.update_panel_length(self.solarPanelHeightWidget.slider.value())
         self.resultsWidget.energyWidget.update_panel_height(self.solarPanelHeightWidget.value())
+        self._surface_handler()
         return
     
     def _width_handler(self) -> None:
         self.solarPanel.update_panel_width(self.solarPanelWidthWidget.slider.value())
         self.resultsWidget.energyWidget.update_panel_width(self.solarPanelWidthWidget.value())
+        self._surface_handler()
         return
+    
+    def _surface_handler(self) -> None:
+        # Get height and width in cm, convert to m
+        height = self.solarPanelHeightWidget.value()/100
+        width = self.solarPanelWidthWidget.value()/100
+        
+        self.solarPanelSurfaceWidget.setText(f"\t Solar panel's surface: {height*width:.2} m²")
     
     def _efficiency_handler(self) -> None:
         self.resultsWidget.energyWidget.update_efficiency(self.solarPanelEfficiencyWidget.value())

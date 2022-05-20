@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from water import heatedLiters, tankSatisfaction
 
 
-class Color(QWidget):
+class Color(QFrame):
     
     def __init__(self, *color) -> None:
         super().__init__()
@@ -25,6 +25,7 @@ class Color(QWidget):
         self.setPalette(palette)
         self.setMinimumWidth(40)
         self.setMinimumHeight(30)
+        self.setFrameShape(0x1) #Box shape
 
 #################### Per day energy production ####################
 
@@ -58,12 +59,12 @@ class EnergyWidget(QWidget):
             self.panelOrientation: float = 180  # °, 0° is north, -90° is west, 90° is east
             self.efficiency: float = 0.3  # [0,1]
             # °, 0 is at the equator, 90 at the North pole, -90 South pole
+            # Plug Geneva coordinates
             self.latitude: float = 46.204
             self.longitude: float = 6.142
             self.timeByHour: typing.List[datetime] = [datetime(
                 2002, 1, 1, 0) + timedelta(hours=i) for i in range(365*24)]  # dates, with year,month,day,hour
-            self.receviedEnergyPerHour: typing.List[float] = [
-                0]*365*24  # Wh/m^2
+            self.receviedEnergyPerHour: typing.List[float] = [0]*365*24  # Wh/m^2
 
         self.energyPerDay: typing.List[float] = [0]*365  # Wh
 
@@ -81,11 +82,12 @@ class EnergyWidget(QWidget):
             brush=pg.mkBrush(pg.mkColor((50, 218, 244, int(0.8*255)))))
         self.energyPlotItem.addItem(self.energyBarGraph)
         self.energyPlotItem.getViewBox().setMouseEnabled(x=False, y=False)
-        # self.energyPlotWidget.setMininmumHeight(150)
-        # self.energyPlotWidget.setMininmumWidth(200)
+        self.setMinimumWidth(40)
+        self.setMinimumHeight(30)
+         
         self.energyPlotWidget.setTitle("Energy produced each day")
 
-        self.energyPlotWidget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,
                                             QSizePolicy.Policy.MinimumExpanding)
 
         layout.addWidget(self.energyPlotWidget, 0, 0, 2, 2)
@@ -193,6 +195,12 @@ class SatisfactionWidget(QWidget):
             x=range(1, len(self.energyPerDay)+1), y1=self.tankFillPerDay, width=1,
             pen=pg.mkPen(pg.mkColor((0, 0, 0, int(0.05*255))), width=2),
             brush=pg.mkBrush(self.tankFillColor))
+        
+        self.unsatisfiedColor  = pg.mkColor((220, 220, 220, int(0.5*255)))
+        self.unsatisfiedBarGraph: pg.BarGraphItem = pg.BarGraphItem(
+            x=range(1, len(self.energyPerDay)+1), y1=[1.0]*365, width=1,
+            pen=pg.mkPen(self.unsatisfiedColor, width=2),
+            brush=pg.mkBrush(self.unsatisfiedColor))
 
         self.tankEmptyColor = pg.mkColor((244, 234, 50, int(0.9*255)))
         self.tankEmptyBarGraph: pg.BarGraphItem = pg.BarGraphItem(
@@ -222,6 +230,7 @@ class SatisfactionWidget(QWidget):
 
         self.plotWidget.addItem(self.wastedBarGraph)
         self.plotWidget.addItem(self.tankFillBarGraph)
+        self.plotWidget.addItem(self.unsatisfiedBarGraph)
         self.plotWidget.addItem(self.tankEmptyBarGraph)
         self.plotWidget.addItem(self.panelBarGraph)
 
@@ -229,11 +238,11 @@ class SatisfactionWidget(QWidget):
         self.plotWidget.setTitle("Hot water supply's breakdown")
         self.plotWidget.setLabel('bottom', "Day")
         self.plotWidget.setLabel('left', "Proportion of water provided")
-        self.plotWidget.setMinimumWidth(200)
-        self.plotWidget.setMinimumHeight(200)
+        self.setMinimumWidth(40)
+        self.setMinimumHeight(30)
 
-        self.plotWidget.setSizePolicy(QSizePolicy.Policy.Minimum,
-                                      QSizePolicy.Policy.Minimum)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,
+                                      QSizePolicy.Policy.MinimumExpanding)
 
         layout.addWidget(self.plotWidget,0,0,2,2)
         
@@ -254,6 +263,12 @@ class SatisfactionWidget(QWidget):
         self.wastedFrame = Color(self.wastedColor)
         legendLayout.addRow(self.wastedFrame,QLabel("Wasted output"))
         
+        self.unsatisfiedFrame = Color(self.unsatisfiedColor)
+        legendLayout.addRow(self.unsatisfiedFrame, QLabel("Unsatisfied demand"))
+        
+        self.missingWaterLabel = QLabel("Volume missing: 0 L",self)
+        legendLayout.addRow(QLabel(), self.missingWaterLabel)
+        
         layout.addWidget(legendWidget,0,2,2,1)
         
         self._replot()
@@ -270,6 +285,7 @@ class SatisfactionWidget(QWidget):
         
         self.wastedBarGraph.setOpts(y1=[0]*365)
         self.tankFillBarGraph.setOpts(y1=[0]*365)
+        self.unsatisfiedBarGraph.setOpts(y1=[0]*365)
         self.tankEmptyBarGraph.setOpts(y1=[0]*365)
         self.panelBarGraph.setOpts(y1=[0]*365)
 
@@ -314,9 +330,13 @@ class SatisfactionWidget(QWidget):
                 
             self.wastedBarGraph.setOpts(y1=overflowBarVals)
             self.tankFillBarGraph.setOpts(y1=tankFillBarVals)
+            self.unsatisfiedBarGraph.setOpts(y1=[1]*365)
             self.tankEmptyBarGraph.setOpts(y1=tankEmptyBarVals)
             self.panelBarGraph.setOpts(y1=panelBarVals)
-
+            
+            missingWaterDaily = self.volumeWanted - np.clip(np.array(producedPerDay) + np.array(deltaTanks),0,self.volumeWanted)
+            missingWater = np.sum(missingWaterDaily)
+    
         else:
             self.panelPerDay = [heatedLiters(
                 self.entryTemperature, self.exitTemperature, e) for e in self.energyPerDay]
@@ -328,7 +348,16 @@ class SatisfactionWidget(QWidget):
             self.wastedPerDay = [p/self.volumeWanted - 1 if p > self.volumeWanted else 0 for p in self.panelPerDay]
 
             self.wastedBarGraph.setOpts(y1=wasterBarVals)
+            self.unsatisfiedBarGraph.setOpts(y1=[1]*365)
             self.panelBarGraph.setOpts(y1=self.panelSatisfactionPerDay)
+            
+            missingWaterDaily = self.volumeWanted - np.clip(np.array(self.panelPerDay),0,self.volumeWanted)
+            missingWater = np.sum(missingWaterDaily)
+            
+        if missingWater > 1000:
+            self.missingWaterLabel.setText(f"Volume missing: {missingWater/1000:.2f} m^3")
+        else:
+            self.missingWaterLabel.setText(f"Volume missing: {missingWater:.2f} L")
 
         self.valueChanged.emit()
 
@@ -416,7 +445,7 @@ class SerieBreakdown(QFrame):
                 self.rangeLabel.setText(f"[ {self.minVal:.2f} , {self.maxVal:.2f} ] {self.unit}")
                 self.avgLabel.setText(f"{self.avgVal:.2f} ± {self.stdVal:.2f} {self.unit}")
         else:
-            self.rangeLabel.setText(f"[ {self.minVal*100:.2f} , {self.maxVal*100:.2f} %]")
+            self.rangeLabel.setText(f"[ {self.minVal*100:.2f} , {self.maxVal*100:.2f} ] %")
             self.avgLabel.setText(f"{self.avgVal*100:.2f} ± {self.stdVal*100:.2f} %")
         
 
@@ -442,7 +471,7 @@ class AdditionalFeedback(QScrollArea):
         
         self.totalSatisfactionPerDay: typing.List[float] = np.array(self.panelSatisfactionPerDay) + np.array(self.tankEmptyPerDay)
 
-        # Declare wwidgets
+        # Declare widgets
         layout = QVBoxLayout(self)
         
         titleWidget = QFrame(self)
@@ -450,32 +479,32 @@ class AdditionalFeedback(QScrollArea):
         titleText = QLabel("Breakdown of several daily quantities",titleWidget)
         titleText.setStyleSheet("font-weight: bold")
         titleLayout.addWidget(titleText)
-        titleWidget.setFrameShape(0x6)
+        titleWidget.setFrameShape(0x6) # Fancy box style
     
+        self.satisfactionWidget = SerieBreakdown(self.totalSatisfactionPerDay, "Satisfaction",parent=self)
+        self.satisfactionWidget.setFrameShape(0x6)
         self.energyWidget = SerieBreakdown(self.energyPerDay,"Energy produced", "Wh",self)
         self.energyWidget.setFrameShape(0x6) 
         self.volumeProducedWidget = SerieBreakdown(self.panelPerDay,"Volume of hot water produced", "L",self)
         self.volumeProducedWidget.setFrameShape(0x6)
         self.tankVolumeWidget = SerieBreakdown(self.tankVolumePerDay,"Volume of hot water in the tank", "L",self)
         self.tankVolumeWidget.setFrameShape(0x6)
-        self.satisfactionWidget = SerieBreakdown(self.totalSatisfactionPerDay, "Satisfaction",parent=self)
-        self.satisfactionWidget.setFrameShape(0x6)
         self.wastedWidget = SerieBreakdown(self.wastedPerDay, "Proportion of produced water wasted ",parent=self)
         self.wastedWidget.setFrameShape(0x6)
         
         # Add them to layout
         layout.addWidget(titleWidget)
+        layout.addWidget(self.satisfactionWidget)
         layout.addWidget(self.energyWidget)
         layout.addWidget(self.volumeProducedWidget)
         layout.addWidget(self.tankVolumeWidget)
-        layout.addWidget(self.satisfactionWidget)
         layout.addWidget(self.wastedWidget)
         
         container = QWidget()
         container.setLayout(layout)
         self.setWidget(container)
         
-        #self.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.MinimumExpanding) 
+        self.setSizePolicy(QSizePolicy.Policy.Minimum,QSizePolicy.Policy.MinimumExpanding) 
     
     
     def update_energyPerDay(self,l:typing.List[float]):
@@ -498,6 +527,7 @@ class AdditionalFeedback(QScrollArea):
             self.totalSatisfactionPerDay = a1 + a2
         else:
             self.totalSatisfactionPerDay = a1
+        self.totalSatisfactionPerDay = np.clip(self.totalSatisfactionPerDay,0,1)
         self.satisfactionWidget.update(self.totalSatisfactionPerDay)
         
     def update_tankEmpty(self,l:typing.List[float]):
@@ -508,6 +538,7 @@ class AdditionalFeedback(QScrollArea):
             self.totalSatisfactionPerDay = a1 + a2
         else:
             self.totalSatisfactionPerDay = a1
+        self.totalSatisfactionPerDay = np.clip(self.totalSatisfactionPerDay,0,1)
         self.satisfactionWidget.update(self.totalSatisfactionPerDay)
         
     def update_wasted(self,l:typing.List[float]):
