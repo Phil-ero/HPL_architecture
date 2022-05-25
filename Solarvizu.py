@@ -1,7 +1,6 @@
 import sys
 import pyqtgraph as pg
 import numpy as np
-import typing
 from PyQt5.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,\
     QApplication, QMainWindow, QLabel
 from PyQt5 import QtCore

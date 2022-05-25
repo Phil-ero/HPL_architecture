@@ -5,10 +5,10 @@ from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow, QPushB
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 
-from ParametersWidget import ParametersWidget, HBoxSlider, VBoxSlider, VRangeSlider, HFloatSlider, VFloatSlider
+from ParametersWidget import ParametersWidget, HBoxSlider, VBoxSlider, VRangeSlider, HFloatSlider, VFloatSlider,\
+                            OrientationWidget,HBoxSlider
 from Section import Section
 from MeteoReader import DayMeteoWidget,MonthMeteoWidget, loadMeteoCSV
-from ParametersWidget import OrientationWidget,HBoxSlider
 from Solarvizu import Solar_Panel
 from ResultsWidget import ResultsWidget
 
@@ -35,7 +35,7 @@ class TabContent(QWidget):
         localisationLayout = QGridLayout(localisationSection.contentArea)
         
         # Widgets
-        self.backToGenevaButton = QPushButton("Back to Geneva!",parent=localisationSection)
+        self.backToGenevaButton = QPushButton("Back to Geneva !",parent=localisationSection)
         self.backToGenevaButton.clicked.connect(self._back_to_geneva)
         self.latitudeWidget = VFloatSlider(-90000,90000,3,"Latitude","°")
         self.latitudeWidget.slider.setValue(46204)
@@ -133,7 +133,7 @@ class TabContent(QWidget):
         self.boilerCapEnableWidget.setChecked(False)
         self.boilerCapEnableWidget.toggled.connect(self._boiler_capacity_enable_handler)
         
-        self.boilerCapacityWidget = HBoxSlider(1,5000,1,"Tank's capacity", "L")
+        self.boilerCapacityWidget = HBoxSlider(1,10000,1,"Tank's capacity", "L")
         self.boilerCapacityWidget.setDisabled(True)
         self.boilerCapacityWidget.valueChanged.connect(self._boiler_capacity_handler)
         
