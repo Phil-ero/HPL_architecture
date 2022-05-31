@@ -87,12 +87,12 @@ class TabContent(QWidget):
         self.orientationAngleWidget.slider.setValue(145)
         self.orientationAngleWidget.valueChanged.connect(self._orientation_angle_handler)
         
-        self.solarPanelWidthWidget = HBoxSlider(1,1000,1,"Width:","cm")
-        self.solarPanelWidthWidget.slider.setValue(300)
+        self.solarPanelWidthWidget = HBoxSlider(1,10000,1,"Width:","cm")
+        self.solarPanelWidthWidget.slider.setValue(3000)
         self.solarPanelWidthWidget.valueChanged.connect(self._width_handler)
         
-        self.solarPanelHeightWidget = HBoxSlider(1,1000,1,"Height:","cm")
-        self.solarPanelHeightWidget.slider.setValue(100)
+        self.solarPanelHeightWidget = HBoxSlider(1,10000,1,"Height:","cm")
+        self.solarPanelHeightWidget.slider.setValue(1000)
         self.solarPanelHeightWidget.valueChanged.connect(self._height_handler)
         
         self.solarPanelSurfaceWidget = QLabel("\t Solar panel's surface: 3 m²")
@@ -131,17 +131,25 @@ class TabContent(QWidget):
         
         self.boilerCapEnableWidget = QCheckBox("Hot water storage tank")
         self.boilerCapEnableWidget.setChecked(False)
-        self.boilerCapEnableWidget.toggled.connect(self._boiler_capacity_enable_handler)
+        self.boilerCapEnableWidget.toggled.connect(self._boiler_enable_handler)
         
         self.boilerCapacityWidget = HBoxSlider(1,10000,1,"Tank's capacity", "L")
         self.boilerCapacityWidget.setDisabled(True)
-        self.boilerCapacityWidget.valueChanged.connect(self._boiler_capacity_handler)
+        self.boilerCapacityWidget.valueChanged.connect(self._boiler_handler)
+        
+        self.boilerRetainabilityWidget = HBoxSlider(1,100,1,"Tank's retainability", "%")
+        self.boilerRetainabilityWidget.setDisabled(True)
+        self.boilerRetainabilityWidget.valueChanged.connect(self._boiler_handler)
+        
+        self.boilerRetainabilityLabel = QLabel("Tank's retainability: hot water's proportion in the tank kept from a day to the next")
         
         # Add widgets to layout
         boilerLayout.addWidget(self.boilerConsumptionWidget)
         boilerLayout.addWidget(self.boilerTemperaturesWidget)
         boilerLayout.addWidget(self.boilerCapEnableWidget)
         boilerLayout.addWidget(self.boilerCapacityWidget)
+        boilerLayout.addWidget(self.boilerRetainabilityWidget)
+        boilerLayout.addWidget(self.boilerRetainabilityLabel)
         boilerSection.setContentLayout(boilerLayout)
         boilerSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
         
@@ -206,8 +214,8 @@ class TabContent(QWidget):
         self._efficiency_handler()
         self._water_consumption_handler()
         self._water_temperature_handler()
-        self._boiler_capacity_enable_handler()
-        self._boiler_capacity_handler()
+        self._boiler_enable_handler()
+        self._boiler_handler()
     
     def _back_to_geneva(self) -> None:
         self.latitudeWidget.slider.setValue(46204)
@@ -257,7 +265,7 @@ class TabContent(QWidget):
         self.solarPanelSurfaceWidget.setText(f"\t Solar panel's surface: {height*width:.2} m²")
     
     def _efficiency_handler(self) -> None:
-        self.resultsWidget.energyWidget.update_efficiency(self.solarPanelEfficiencyWidget.value())
+        self.resultsWidget.energyWidget.update_efficiency(self.solarPanelEfficiencyWidget.value()/100)
         return
     
     def _water_consumption_handler(self) -> None:
@@ -268,18 +276,21 @@ class TabContent(QWidget):
         self.resultsWidget.satisfactionWidget.update_temperatures(self.boilerTemperaturesWidget.value())
         return
     
-    def _boiler_capacity_enable_handler(self) -> None:
+    def _boiler_enable_handler(self) -> None:
         if self.boilerCapEnableWidget.isChecked():
             self.boilerCapacityWidget.setEnabled(True)
-            self.resultsWidget.satisfactionWidget.update_water_tank(True,self.boilerCapacityWidget.value())
+            self.boilerRetainabilityWidget.setEnabled(True)
+            self.resultsWidget.satisfactionWidget.update_water_tank(True,self.boilerCapacityWidget.value(),self.boilerRetainabilityWidget.value())
         else:
             self.boilerCapacityWidget.setEnabled(False)
-            self.resultsWidget.satisfactionWidget.update_water_tank(False,self.boilerCapacityWidget.value())
+            self.boilerRetainabilityWidget.setEnabled(False)
+            self.resultsWidget.satisfactionWidget.update_water_tank(False,self.boilerCapacityWidget.value(),self.boilerRetainabilityWidget.value())
         return
     
-    def _boiler_capacity_handler(self) -> None:
-        self.resultsWidget.satisfactionWidget.update_water_tank(self.boilerCapEnableWidget.isChecked(),self.boilerCapacityWidget.value())
+    def _boiler_handler(self) -> None:
+        self.resultsWidget.satisfactionWidget.update_water_tank(self.boilerCapEnableWidget.isChecked(),self.boilerCapacityWidget.value(), self.boilerRetainabilityWidget.value()/100)
         return
+    
         
 def test():
     # General PyQtGraph options

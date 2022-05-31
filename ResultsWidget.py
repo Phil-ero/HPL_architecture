@@ -172,6 +172,7 @@ class SatisfactionWidget(QWidget):
 
         self.waterTankEnabled: bool = False
         self.waterTankCapacity: float = 0  # L
+        self.waterTankRetainability: float = 1.0 # %
 
         self.energyPerDay: typing.List[float] = [0]*365  # Wh
 
@@ -291,11 +292,11 @@ class SatisfactionWidget(QWidget):
 
         if self.waterTankEnabled:
             self.tankVolumePerDay, self.panelPerDay = tankSatisfaction(
-                self.entryTemperature, self.exitTemperature, self.volumeWanted, self.waterTankCapacity, self.energyPerDay)
+                self.entryTemperature, self.exitTemperature, self.volumeWanted, self.waterTankCapacity, self.waterTankRetainability, self.energyPerDay)
             
             producedPerDay = [p/self.volumeWanted for p in self.panelPerDay]
             tankValues = [t/self.volumeWanted for t in self.tankVolumePerDay]
-            deltaTanks = [tankValues[i+1] - tankValues[i] for i in range(len(self.tankVolumePerDay)-1)]
+            deltaTanks = [tankValues[i+1] - self.waterTankRetainability*tankValues[i] for i in range(len(self.tankVolumePerDay)-1)]
             self.panelSatisfactionPerDay = [p/self.volumeWanted for p in self.panelPerDay]
             
             overflowBarVals = []
@@ -370,9 +371,10 @@ class SatisfactionWidget(QWidget):
         self.exitTemperature = temps[1]
         self._replot()
 
-    def update_water_tank(self, enable: bool, c: float) -> None:
+    def update_water_tank(self, enable: bool, c: float, r: float) -> None:
         self.waterTankEnabled = enable
         self.waterTankCapacity = c
+        self.waterTankRetainability = r
         self._replot()
 
     def update_energyPerDay(self, energies: typing.List[float]) -> None:
