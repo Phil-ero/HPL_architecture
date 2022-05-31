@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 #from tzwhere import tzwhere
 #tzWhere = tzwhere.tzwhere(forceTZ=True)
 
-def Calc3DEnergy(length: float, width: float, inclination: float, orientation: float, efficiency: float, latitude: float, longitude: float, dates: typing.List[datetime], weather: typing.List[float]) -> typing.List[float]:
+def Calc3DEnergy(length: float, width: float, inclination: float, orientation: float, efficiency: float, latitude: float, longitude: float, timeDelta:timedelta, dates: typing.List[datetime], weather: typing.List[float]) -> typing.List[float]:
     # length, width in meters
     # inclination in degrees, 0° is flat, 90° is standing
     # orientation in degrees, 0° is north, 90° is east
@@ -27,7 +27,7 @@ def Calc3DEnergy(length: float, width: float, inclination: float, orientation: f
     #timezone = pytz.timezone(tzName)
     
     #timeDelta = timezone.utcoffset(dates[0])
-    timeDelta = -timedelta(hours=2)
+    #timeDelta = -timedelta(hours=2)
     utc_dates = [d + timeDelta for d in dates]
     sun_positions = np.array([sunpos(
         (d.year, d.month, d.day, d.hour, 0, 0, 0), (latitude, longitude)) for d in utc_dates])

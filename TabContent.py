@@ -1,7 +1,7 @@
 import sys, os
 import typing
 from PyQt5.QtWidgets import QApplication,QWidget,QGridLayout,QMainWindow, QPushButton, QLabel,\
-    QTabWidget, QVBoxLayout, QSizePolicy, QCheckBox, QFileDialog
+    QTabWidget, QVBoxLayout, QSizePolicy, QCheckBox, QFileDialog, QComboBox
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 
@@ -11,6 +11,48 @@ from Section import Section
 from MeteoReader import DayMeteoWidget,MonthMeteoWidget, loadMeteoCSV
 from Solarvizu import Solar_Panel
 from ResultsWidget import ResultsWidget
+from datetime import timedelta
+
+UTC_timezones:typing.List[typing.Tuple[str,timedelta]] = [
+    ("UTC -12:00", timedelta(hours=12,minutes=0)),
+    ("UTC -11:00", timedelta(hours=11,minutes=0)),
+    ("UTC -10:00", timedelta(hours=10,minutes=0)),
+    ("UTC -09:30", timedelta(hours=9,minutes=30)),
+    ("UTC -09:00", timedelta(hours=9,minutes=0)),
+    ("UTC -08:00", timedelta(hours=8,minutes=0)),
+    ("UTC -07:00", timedelta(hours=7,minutes=0)),
+    ("UTC -06:00", timedelta(hours=6,minutes=0)),
+    ("UTC -05:00", timedelta(hours=5,minutes=0)),
+    ("UTC -04:00", timedelta(hours=4,minutes=0)),
+    ("UTC -03:30", timedelta(hours=3,minutes=30)),
+    ("UTC -03:00", timedelta(hours=3,minutes=0)),
+    ("UTC -02:00", timedelta(hours=1,minutes=0)),
+    ("UTC -01:00", timedelta(hours=2,minutes=0)),
+    ("UTC ±00:00", timedelta(hours=00,minutes=0)),
+    ("UTC +01:00", -timedelta(hours=1,minutes=0)),
+    ("UTC +02:00", -timedelta(hours=2,minutes=0)),
+    ("UTC +03:00", -timedelta(hours=3,minutes=0)),
+    ("UTC +03:30", -timedelta(hours=3,minutes=30)),
+    ("UTC +04:00", -timedelta(hours=4,minutes=0)),
+    ("UTC +04:30", -timedelta(hours=4,minutes=30)),
+    ("UTC +05:00", -timedelta(hours=5,minutes=0)),
+    ("UTC +05:30", -timedelta(hours=5,minutes=30)),
+    ("UTC +05:45", -timedelta(hours=5,minutes=45)),
+    ("UTC +06:00", -timedelta(hours=6,minutes=0)),
+    ("UTC +06:30", -timedelta(hours=6,minutes=30)),
+    ("UTC +07:00", -timedelta(hours=7,minutes=0)),
+    ("UTC +08:00", -timedelta(hours=8,minutes=0)),
+    ("UTC +08:45", -timedelta(hours=8,minutes=45)),
+    ("UTC +09:00", -timedelta(hours=9,minutes=0)),
+    ("UTC +09:30", -timedelta(hours=9,minutes=30)),
+    ("UTC +10:00", -timedelta(hours=10,minutes=0)),
+    ("UTC +10:30", -timedelta(hours=10,minutes=30)),
+    ("UTC +11:00", -timedelta(hours=11,minutes=0)),
+    ("UTC +12:00", -timedelta(hours=12,minutes=0)),
+    ("UTC +12:45", -timedelta(hours=12,minutes=45)),
+    ("UTC +13:00", -timedelta(hours=13,minutes=0)),
+    ("UTC +14:00", -timedelta(hours=14,minutes=0)),
+]
 
 class TabContent(QWidget):
 
@@ -43,11 +85,25 @@ class TabContent(QWidget):
         self.longitudeWidget = HFloatSlider(-180000,180000,3,"Longitude","°")
         self.longitudeWidget.slider.setValue(6143)
         self.longitudeWidget.valueChanged.connect(self._longitude_handler)
+        self.timezoneWidget = QComboBox(self)
+        for s,dt in UTC_timezones:
+            self.timezoneWidget.addItem(s,dt)
+            
+        self.timezoneWidget.setEditable(False)
+        self.timezoneWidget.setCurrentIndex(16) #UTC +02:00; Geneva 
+        self.timezoneWidget.currentIndexChanged.connect(self._timezone_handler)
+    
+        
+        self.timezoneLabel = QLabel("UTC Timezone: ")
+        self.timezoneLabel.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        
         
         # Layout
         localisationLayout.addWidget(self.backToGenevaButton,0,0,1,2)
         localisationLayout.addWidget(self.latitudeWidget,2,0,2,1)
         localisationLayout.addWidget(self.longitudeWidget,1,0,1,2)
+        localisationLayout.addWidget(self.timezoneLabel,4,0)
+        localisationLayout.addWidget(self.timezoneWidget,4,1)
         localisationSection.setContentLayout(localisationLayout)
         localisationSection.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,QSizePolicy.Policy.Fixed)
         
@@ -220,6 +276,7 @@ class TabContent(QWidget):
     def _back_to_geneva(self) -> None:
         self.latitudeWidget.slider.setValue(46204)
         self.longitudeWidget.slider.setValue(6143)
+        self.timezoneWidget.setCurrentIndex(16)
         self._latitude_handler()
         self._longitude_handler()
     
@@ -229,6 +286,10 @@ class TabContent(QWidget):
     
     def _longitude_handler(self) -> None:
         self.resultsWidget.energyWidget.update_longitude(self.longitudeWidget.value())
+        return
+    
+    def _timezone_handler(self) -> None:
+        self.resultsWidget.energyWidget.update_timedelta(self.timezoneWidget.currentData())
         return
     
     def _energy_received_handler(self) -> None:

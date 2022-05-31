@@ -66,7 +66,9 @@ class EnergyWidget(QWidget):
                 2002, 1, 1, 0) + timedelta(hours=i) for i in range(365*24)]  # dates, with year,month,day,hour
             self.receviedEnergyPerHour: typing.List[float] = [0]*365*24  # Wh/m^2
 
+        self.timedelta:timedelta = timedelta(0)
         self.energyPerDay: typing.List[float] = [0]*365  # Wh
+        
 
         # Graph
         layout = QGridLayout(self)
@@ -107,7 +109,7 @@ class EnergyWidget(QWidget):
         """
         energyPerHour = Calc3DEnergy(self.panelHeight/100,self.panelWidth/100,
                                      self.panelInclination,self.panelOrientation,
-                                     self.efficiency,self.latitude,self.longitude,
+                                     self.efficiency,self.latitude,self.longitude,self.timedelta,
                                      self.timeByHour,self.receviedEnergyPerHour)
 
         _, self.energyPerDay = aggregateByDay(self.timeByHour, energyPerHour)
@@ -146,6 +148,10 @@ class EnergyWidget(QWidget):
         
     def update_longitude(self, l:float) -> None:
         self.longitude = l
+        self._replot()
+        
+    def update_timedelta(self,dt:timedelta) -> None:
+        self.timedelta = dt
         self._replot()
         
     def update_time_by_hour(self,l:typing.List[datetime]) -> None:
