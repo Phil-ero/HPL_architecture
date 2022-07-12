@@ -1,7 +1,6 @@
 import sys
 import pyqtgraph as pg
 import numpy as np
-import typing
 from PyQt5.QtWidgets import QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,\
     QApplication, QMainWindow, QLabel
 from PyQt5 import QtCore
@@ -40,8 +39,8 @@ class Solar_Panel(QWidget):
         self.side_widget.showGrid(x=True, y=True)
         self.side_widget.setTitle(
             'Inclination: ' + str(self._inclination_angle) + '°')
-        self.side_widget.setLabel('bottom', "Length")
-        self.side_widget.setLabel('left', "Height")
+        self.side_widget.setLabel('bottom', "Length (m)")
+        self.side_widget.setLabel('left', "Height (m)")
         #self.side_widget.setMinimumWidth(200)
         #self.side_widget.setMinimumHeight(200)
 
@@ -54,8 +53,8 @@ class Solar_Panel(QWidget):
         self.top_widget.showGrid(x=True, y=True)
         self.top_widget.setTitle(
            'Orientation: ' + str(self._orientation_angle) + '°')
-        self.top_widget.setLabel('bottom', "Width")
-        self.top_widget.setLabel('left', "Length")
+        self.top_widget.setLabel('bottom', "Width (m)")
+        self.top_widget.setLabel('left', "Length (m)")
         #self.top_widget.setMinimumWidth(200)
         #self.top_widget.setMinimumHeight(200)
 

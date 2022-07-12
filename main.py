@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
     
     def __init__(self) -> None:
         super().__init__()
-        self.setWindowTitle("HPL : Solar Panel Simulator")
+        self.setWindowTitle("Simulator: Generate hot water with solar panels")
         #self.resize(400, 200)
         
         #self._createMenuBar()

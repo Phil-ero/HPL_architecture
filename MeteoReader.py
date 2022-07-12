@@ -112,7 +112,7 @@ class DayMeteoWidget(QWidget):
         dates, energies = loadMeteoCSV(data_path)
         dayDates, dayEnergies = aggregateByDay(dates, energies)
 
-        layout = QGridLayout(self)
+        layout = QHBoxLayout(self)
 
         dayWidget = pg.PlotWidget(name="dayWidget")
         dayWidget.setXRange(1, len(dayDates)+1)
@@ -126,13 +126,13 @@ class DayMeteoWidget(QWidget):
             brush=pg.mkBrush(pg.mkColor((242,145,56,200))))
         dayPlotItem.addItem(self.barGaph)
         dayPlotItem.getViewBox().setMouseEnabled(x=False, y=False)
-        #dayWidget.setMinimumHeight(300)
-        #dayWidget.setMinimumWidth(300)
+        #self.setMinimumHeight(30)
+        #self.setMinimumWidth(40)
 
-        dayWidget.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding,
                                   QSizePolicy.Policy.MinimumExpanding)
 
-        layout.addWidget(dayWidget, 0, 0, 2, 2)
+        layout.addWidget(dayWidget)
         
     def update(self,data_path:str):
         dates, energies = loadMeteoCSV(data_path)
